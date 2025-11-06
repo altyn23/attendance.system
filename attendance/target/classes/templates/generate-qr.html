@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>QR Generator - Attendance System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <style>
+        :root {
+            --primary: #8B5CF6;
+            --primary-dark: #7C3AED;
+            --secondary: #EC4899;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --dark: #1F2937;
+            --gray: #6B7280;
+            --light: #F9FAFB;
+            --white: #FFFFFF;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .navbar h1 {
+            color: white;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .nav-btn {
+            padding: 8px 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 25px;
+            padding: 35px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            margin-bottom: 30px;
+        }
+        
+        .card-header h2 {
+            color: var(--dark);
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .card-header p {
+            color: var(--gray);
+            font-size: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--dark);
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .generate-btn {
+            width: 100%;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(139, 92, 246, 0.3);
+        }
+        
+        .generate-btn:disabled {
+            background: var(--gray);
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .qr-display {
+            background: var(--light);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .qr-display.active {
+            background: white;
+            border: 2px solid var(--primary);
+        }
+        
+        #qrcode {
+            margin: 20px auto;
+        }
+        
+        #qrcode canvas {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .qr-code-text {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--light);
+            border-radius: 12px;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: var(--primary);
+            font-family: 'Courier New', monospace;
+        }
+        
+        .qr-info {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #F3E7FC, #E9D5FF);
+            border-radius: 15px;
+        }
+        
+        .qr-info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+        }
+        
+        .qr-info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .qr-info-label {
+            color: var(--gray);
+            font-size: 14px;
+        }
+        
+        .qr-info-value {
+            color: var(--dark);
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .timer {
+            margin-top: 20px;
+            padding: 15px;
+            background: #FEF3C7;
+            border-radius: 12px;
+            color: #92400E;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .timer-icon {
+            font-size: 24px;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .active-sessions {
+            margin-top: 30px;
+        }
+        
+        .active-sessions h3 {
+            color: var(--dark);
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        
+        .session-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 2px solid var(--light);
+            transition: all 0.3s;
+        }
+        
+        .session-item:hover {
+            border-color: var(--primary);
+            transform: translateX(5px);
+        }
+        
+        .session-info {
+            flex: 1;
+        }
+        
+        .session-class {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+        
+        .session-details {
+            font-size: 14px;
+            color: var(--gray);
+        }
+        
+        .session-stats {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .session-count {
+            background: var(--light);
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .session-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            padding: 8px 15px;
+            background: white;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .action-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .action-btn.danger {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+        
+        .action-btn.danger:hover {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .placeholder {
+            text-align: center;
+            color: var(--gray);
+            padding: 60px 20px;
+        }
+        
+        .placeholder-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .placeholder-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .placeholder-hint {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>🔲 QR Generator</h1>
+        <div class="nav-links">
+            <a href="/dashboard" class="nav-btn">← Dashboard</a>
+            <a href="/attendance-report" class="nav-btn">Есептер</a>
+            <a href="/profile" class="nav-btn">Профиль</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2>QR код жасау</h2>
+                    <p>Студенттердің қатысуын тіркеу үшін QR код генерациялаңыз</p>
+                </div>
+                
+                <form id="generateForm">
+                    <div class="form-group">
+                        <label for="classSelect">Сабақты таңдаңыз</label>
+                        <select id="classSelect" required>
+                            <option value="">Таңдаңыз...</option>
+                            <option th:each="class : ${classes}" 
+                                    th:value="${class.id}" 
+                                    th:text="${class.name + ' - ' + class.group}">
+                                Сабақ
+                            </option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="room">Аудитория</label>
+                            <input type="text" id="room" placeholder="Мысалы: 305" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="duration">Ұзақтығы (минут)</label>
+                            <input type="number" id="duration" value="15" min="5" max="60" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="generate-btn">
+                        ✨ QR код жасау
+                    </button>
+                </form>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">Бүгін</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #10B981, #34D399);">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">Апта</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #F59E0B, #FBBf24);">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">Барлығы</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>QR код дисплейі</h2>
+                    <p>Студенттерге көрсету үшін</p>
+                </div>
+                
+                <div class="qr-display" id="qrDisplay">
+                    <div class="placeholder">
+                        <div class="placeholder-icon">🔲</div>
+                        <div class="placeholder-text">QR код әзірге жоқ</div>
+                        <div class="placeholder-hint">Жасау үшін сол жақтағы форманы толтырыңыз</div>
+                    </div>
+                </div>
+                
+                <div class="active-sessions">
+                    <h3>Белсенді сессиялар</h3>
+                    <div id="activeSessions">
+                        <p style="text-align: center; color: var(--gray); padding: 20px;">
+                            Белсенді сессиялар жоқ
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentTimer = null;
+        
+        document.getElementById('generateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const classId = document.getElementById('classSelect').value;
+            const room = document.getElementById('room').value;
+            const duration = document.getElementById('duration').value;
+            
+            try {
+                const response = await fetch('/api/qr/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ classId, room, duration })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayQRCode(data);
+                    loadActiveSessions();
+                } else {
+                    alert(data.error || 'QR код жасау кезінде қате');
+                }
+            } catch (error) {
+                alert('Серверге қосылу қатесі: ' + error.message);
+            }
+        });
+        
+        function displayQRCode(data) {
+            const qrDisplay = document.getElementById('qrDisplay');
+            qrDisplay.classList.add('active');
+            
+            const className = document.getElementById('classSelect').selectedOptions[0].text;
+            const room = document.getElementById('room').value;
+            
+            qrDisplay.innerHTML = `
+                <div>
+                    <h3 style="color: var(--dark); margin-bottom: 20px;">QR код дайын!</h3>
+                    <div id="qrcode"></div>
+                    <div class="qr-code-text">${data.qrCode}</div>
+                    <div class="qr-info">
+                        <div class="qr-info-item">
+                            <span class="qr-info-label">Сабақ:</span>
+                            <span class="qr-info-value">${className}</span>
+                        </div>
+                        <div class="qr-info-item">
+                            <span class="qr-info-label">Аудитория:</span>
+                            <span class="qr-info-value">${room}</span>
+                        </div>
+                        <div class="qr-info-item">
+                            <span class="qr-info-label">Код:</span>
+                            <span class="qr-info-value">${data.qrCode}</span>
+                        </div>
+                    </div>
+                    <div class="timer" id="timer">
+                        <span class="timer-icon">⏰</span>
+                        <span id="timerText">15:00</span>
+                        <span>қалды</span>
+                    </div>
+                </div>
+            `;
+            
+            QRCode.toCanvas(document.createElement('canvas'), data.qrCode, {
+                width: 250,
+                margin: 2,
+                color: {
+                    dark: '#1F2937',
+                    light: '#FFFFFF'
+                }
+            }, function (error, canvas) {
+                if (error) console.error(error);
+                document.getElementById('qrcode').appendChild(canvas);
+            });
+            
+            startTimer(new Date(data.expiresAt));
+        }
+        
+        function startTimer(expiresAt) {
+            if (currentTimer) clearInterval(currentTimer);
+            
+            currentTimer = setInterval(() => {
+                const now = new Date();
+                const diff = expiresAt - now;
+                
+                if (diff <= 0) {
+                    clearInterval(currentTimer);
+                    document.getElementById('timer').innerHTML = `
+                        <span style="color: var(--danger);">⏱️ Мерзімі аяқталды</span>
+                    `;
+                    document.getElementById('qrDisplay').classList.remove('active');
+                    loadActiveSessions();
+                } else {
+                    const minutes = Math.floor(diff / 60000);
+                    const seconds = Math.floor((diff % 60000) / 1000);
+                    document.getElementById('timerText').textContent = 
+                        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+        
+        async function loadActiveSessions() {
+            try {
+                const response = await fetch('/api/qr/sessions');
+                const data = await response.json();
+                
+                if (data.success && data.sessions.length > 0) {
+                    const sessionsHtml = data.sessions.map(session => `
+                        <div class="session-item">
+                            <div class="session-info">
+                                <div class="session-class">${session.className}</div>
+                                <div class="session-details">
+                                    Аудитория: ${session.room} | Код: ${session.qrCode}
+                                </div>
+                            </div>
+                            <div class="session-stats">
+                                <div class="session-count">
+                                    👥 ${session.scannedCount} студент
+                                </div>
+                                <div class="session-actions">
+                                    <button class="action-btn" onclick="viewSession('${session.id}')">
+                                        👁️ Көру
+                                    </button>
+                                    <button class="action-btn danger" onclick="endSession('${session.id}')">
+                                        ⏹️ Аяқтау
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    document.getElementById('activeSessions').innerHTML = sessionsHtml;
+                } else {
+                    document.getElementById('activeSessions').innerHTML = `
+                        <p style="text-align: center; color: var(--gray); padding: 20px;">
+                            Белсенді сессиялар жоқ
+                        </p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading sessions:', error);
+            }
+        }
+        
+        function viewSession(sessionId) {
+            console.log('View session:', sessionId);
+        }
+        
+        function endSession(sessionId) {
+            if (confirm('Сессияны аяқтағыңыз келе ме?')) {
+                console.log('End session:', sessionId);
+                loadActiveSessions();
+            }
+        }
+        
+        loadActiveSessions();
+        
+        setInterval(loadActiveSessions, 10000);
+    </script>
+</body>
+</html>

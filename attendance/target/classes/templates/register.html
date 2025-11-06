@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Тіркелу - Attendance System</title>
+  <style>
+    :root {
+      --primary: #2e5ccd;
+      --accent: #5eb680;
+      --text-dark: #1e293b;
+      --text-light: #f1f5f9;
+      --bg: #f8fafc;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(115deg, #1e3a8a 0%, #172554 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dark);
+    }
+
+    .container {
+      width: 450px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      border-radius: 24px;
+      padding: 40px 32px 48px;
+      box-shadow: 0 8px 35px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(25px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    p.subtitle {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 15px;
+      margin-bottom: 30px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      text-align: left;
+    }
+
+    .form-group.full-width {
+      grid-column: span 2;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      color: #e2e8f0;
+      margin-bottom: 6px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px 15px;
+      border-radius: 10px;
+      border: none;
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 15px;
+      outline: none;
+      transition: box-shadow 0.2s ease, transform 0.15s ease;
+    }
+
+    input:focus, select:focus {
+      box-shadow: 0 0 0 3px rgba(46, 92, 205, 0.3);
+      transform: scale(1.01);
+    }
+
+    .roles {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .role {
+      flex: 1;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.85);
+      padding: 10px 0;
+      cursor: pointer;
+      font-weight: 500;
+      color: #1e293b;
+      border: 1px solid transparent;
+      transition: 0.25s ease;
+    }
+
+    .role:hover {
+      background: rgba(255, 255, 255, 1);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .role.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 15px rgba(94, 182, 128, 0.3);
+    }
+
+    .btn {
+      width: 100%;
+      background: var(--primary);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      padding: 14px;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 8px 25px rgba(46, 92, 205, 0.3);
+      margin-top: 20px;
+    }
+
+    .btn:hover {
+      background: #224eb4;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(46, 92, 205, 0.35);
+    }
+
+    .msg {
+      display: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .error {
+      background: rgba(255, 87, 87, 0.1);
+      border-left: 4px solid #e63946;
+      color: #fef2f2;
+    }
+
+    .success {
+      background: rgba(94, 182, 128, 0.15);
+      border-left: 4px solid var(--accent);
+      color: #ecfdf5;
+    }
+
+    .login-link {
+      margin-top: 20px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
+    }
+
+    .login-link a {
+      color: #5eb680;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        width: 90%;
+        padding: 32px 24px 40px;
+      }
+      h1 {
+        font-size: 24px;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-group.full-width {
+        grid-column: span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Тіркелу</h1>
+    <p class="subtitle">Жаңа аккаунт құру</p>
+
+    <div id="msg" class="msg"></div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="firstName">Аты *</label>
+        <input id="firstName" type="text" placeholder="Атыңыз" required />
+      </div>
+      
+      <div class="form-group">
+        <label for="lastName">Тегі *</label>
+        <input id="lastName" type="text" placeholder="Тегіңіз" required />
+      </div>
+      
+      <div class="form-group full-width">
+        <label for="email">Email *</label>
+        <input id="email" type="email" placeholder="email@example.com" required />
+      </div>
+      
+      <div class="form-group">
+        <label for="phone">Телефон</label>
+        <input id="phone" type="tel" placeholder="+7 777 123 4567" />
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Құпиясөз *</label>
+        <input id="password" type="password" placeholder="••••••••" required />
+      </div>
+      
+      <div class="form-group">
+        <label for="confirmPassword">Құпиясөзді растау *</label>
+        <input id="confirmPassword" type="password" placeholder="••••••••" required />
+      </div>
+      
+      <div class="form-group">
+        <label for="department">Кафедра/Бөлім</label>
+        <input id="department" type="text" placeholder="мысалы: Ақпараттық жүйелер" />
+      </div>
+      
+      <div class="form-group">
+        <label for="group">Топ (студенттер үшін)</label>
+        <input id="group" type="text" placeholder="мысалы: ИС-2101" />
+      </div>
+    </div>
+
+    <label style="text-align: left; display: block; margin-bottom: 10px;">Рөлді таңдаңыз:</label>
+    <div class="roles">
+      <div class="role active" data-role="STUDENT">Student</div>
+      <div class="role" data-role="TEACHER">Teacher</div>
+      <div class="role" data-role="ADMIN">Admin</div>
+    </div>
+
+    <button class="btn" onclick="register()">Тіркелу</button>
+
+    <div class="login-link">
+      Аккаунтыңыз бар ма? <a href="/login">Кіру</a>
+    </div>
+  </div>
+
+  <script>
+    const roles = document.querySelectorAll(".role");
+    const msg = document.getElementById("msg");
+    let currentRole = "STUDENT";
+
+    roles.forEach((r) =>
+      r.addEventListener("click", () => {
+        roles.forEach((b) => b.classList.remove("active"));
+        r.classList.add("active");
+        currentRole = r.dataset.role;
+      })
+    );
+
+    async function register() {
+      const firstName = document.getElementById("firstName").value.trim();
+      const lastName = document.getElementById("lastName").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+      const department = document.getElementById("department").value.trim();
+      const group = document.getElementById("group").value.trim();
+      
+      msg.style.display = "none";
+
+      if (!firstName || !lastName || !email || !password) {
+        showMsg("Барлық міндетті өрістерді толтырыңыз", "error");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        showMsg("Құпиясөздер сәйкес келмейді", "error");
+        return;
+      }
+
+      if (password.length < 6) {
+        showMsg("Құпиясөз кемінде 6 символдан тұруы керек", "error");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            firstName,
+            lastName,
+            email, 
+            phone,
+            password,
+            role: currentRole,
+            department,
+            group
+          }),
+        });
+
+        const data = await res.json();
+        if (data.error) {
+          showMsg(data.error, "error");
+          return;
+        }
+
+        showMsg("Тіркелу сәтті өтті! Кіру бетіне өтуде...", "success");
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 2000);
+      } catch (e) {
+        showMsg("Серверге қосылу мүмкін емес", "error");
+      }
+    }
+
+    function showMsg(text, type) {
+      msg.textContent = text;
+      msg.className = "msg " + type;
+      msg.style.display = "block";
+    }
+  </script>
+</body>
+</html>

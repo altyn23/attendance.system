@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Менің қатысуым - Attendance System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #6366F1;
+            --primary-dark: #4F46E5;
+            --secondary: #22D3EE;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --dark: #1F2937;
+            --gray: #6B7280;
+            --light: #F9FAFB;
+            --white: #FFFFFF;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .navbar h1 {
+            color: white;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .nav-btn {
+            padding: 8px 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        /* Statistics Cards */
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+        }
+        
+        .stat-card.success::before {
+            background: linear-gradient(90deg, #10B981, #34D399);
+        }
+        
+        .stat-card.warning::before {
+            background: linear-gradient(90deg, #F59E0B, #FBBf24);
+        }
+        
+        .stat-card.danger::before {
+            background: linear-gradient(90deg, #EF4444, #F87171);
+        }
+        
+        .stat-card.primary::before {
+            background: linear-gradient(90deg, #6366F1, #8B5CF6);
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        
+        .stat-title {
+            color: var(--gray);
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .stat-icon.success {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+        
+        .stat-icon.warning {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+        
+        .stat-icon.danger {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+        
+        .stat-icon.primary {
+            background: #E0E7FF;
+            color: #3730A3;
+        }
+        
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 10px;
+        }
+        
+        .stat-progress {
+            width: 100%;
+            height: 8px;
+            background: var(--light);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .stat-progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 1s ease;
+        }
+        
+        .stat-progress-bar.success {
+            background: linear-gradient(90deg, #10B981, #34D399);
+        }
+        
+        .stat-progress-bar.warning {
+            background: linear-gradient(90deg, #F59E0B, #FBBf24);
+        }
+        
+        .stat-progress-bar.danger {
+            background: linear-gradient(90deg, #EF4444, #F87171);
+        }
+        
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .chart-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .chart-filter {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            background: var(--light);
+            border: none;
+            border-radius: 8px;
+            color: var(--gray);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        /* Attendance Table */
+        .attendance-table {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .table-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: var(--light);
+            border-radius: 10px;
+            padding: 10px 15px;
+            gap: 10px;
+        }
+        
+        .search-input {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 14px;
+            width: 200px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+        }
+        
+        thead tr {
+            background: var(--light);
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            color: var(--gray);
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            first-child {
+                border-radius: 10px 0 0 10px;
+            }
+            last-child {
+                border-radius: 0 10px 10px 0;
+            }
+        }
+        
+        tbody tr {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        
+        tbody tr:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        td {
+            padding: 20px 15px;
+            color: var(--dark);
+            font-size: 15px;
+        }
+        
+        td:first-child {
+            border-radius: 10px 0 0 10px;
+        }
+        
+        td:last-child {
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-badge.present {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+        
+        .status-badge.late {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+        
+        .status-badge.absent {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+        
+        /* Calendar View */
+        .calendar-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            margin-top: 30px;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .calendar-btn {
+            width: 35px;
+            height: 35px;
+            border: none;
+            background: var(--light);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .calendar-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .calendar-day.header {
+            color: var(--gray);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: default;
+        }
+        
+        .calendar-day.active {
+            background: var(--light);
+        }
+        
+        .calendar-day.present {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+        
+        .calendar-day.late {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+        
+        .calendar-day.absent {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+        
+        .calendar-day.today {
+            border: 2px solid var(--primary);
+        }
+        
+        .calendar-day-number {
+            font-size: 16px;
+        }
+        
+        .calendar-day-status {
+            font-size: 10px;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-overview {
+                grid-template-columns: 1fr;
+            }
+            
+            .table-responsive {
+                overflow-x: auto;
+            }
+            
+            table {
+                min-width: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>📊 Менің қатысуым</h1>
+        <div class="nav-links">
+            <a href="/dashboard" class="nav-btn">← Dashboard</a>
+            <a href="/schedule" class="nav-btn">Кесте</a>
+            <a href="/profile" class="nav-btn">Профиль</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <!-- Statistics Overview -->
+        <div class="stats-overview">
+            <div class="stat-card success">
+                <div class="stat-header">
+                    <div class="stat-title">Жалпы қатысу</div>
+                    <div class="stat-icon success">✅</div>
+                </div>
+                <div class="stat-value">92.5%</div>
+                <div class="stat-progress">
+                    <div class="stat-progress-bar success" style="width: 92.5%"></div>
+                </div>
+            </div>
+            
+            <div class="stat-card primary">
+                <div class="stat-header">
+                    <div class="stat-title">Барлық сабақтар</div>
+                    <div class="stat-icon primary">📚</div>
+                </div>
+                <div class="stat-value">148</div>
+                <div class="stat-progress">
+                    <div class="stat-progress-bar primary" style="width: 100%"></div>
+                </div>
+            </div>
+            
+            <div class="stat-card warning">
+                <div class="stat-header">
+                    <div class="stat-title">Кешіккендер</div>
+                    <div class="stat-icon warning">⏰</div>
+                </div>
+                <div class="stat-value">7</div>
+                <div class="stat-progress">
+                    <div class="stat-progress-bar warning" style="width: 4.7%"></div>
+                </div>
+            </div>
+            
+            <div class="stat-card danger">
+                <div class="stat-header">
+                    <div class="stat-title">Қатыспағандар</div>
+                    <div class="stat-icon danger">❌</div>
+                </div>
+                <div class="stat-value">4</div>
+                <div class="stat-progress">
+                    <div class="stat-progress-bar danger" style="width: 2.7%"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Charts Section -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">Қатысу динамикасы</div>
+                    <div class="chart-filter">
+                        <button class="filter-btn active">Апта</button>
+                        <button class="filter-btn">Ай</button>
+                        <button class="filter-btn">Семестр</button>
+                    </div>
+                </div>
+                <canvas id="attendanceChart" width="400" height="200"></canvas>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">Пәндер бойынша</div>
+                </div>
+                <canvas id="subjectsChart" width="200" height="200"></canvas>
+            </div>
+        </div>
+        
+        <!-- Recent Attendance Table -->
+        <div class="attendance-table">
+            <div class="table-header">
+                <div class="table-title">Соңғы қатысулар</div>
+                <div class="search-box">
+                    <span>🔍</span>
+                    <input type="text" class="search-input" placeholder="Іздеу...">
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Күні</th>
+                            <th>Пән</th>
+                            <th>Уақыты</th>
+                            <th>Аудитория</th>
+                            <th>Оқытушы</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>4 Қараша</td>
+                            <td>Программалау</td>
+                            <td>09:00 - 10:30</td>
+                            <td>305</td>
+                            <td>Асқар Мұратов</td>
+                            <td><span class="status-badge present">Қатысты</span></td>
+                        </tr>
+                        <tr>
+                            <td>1 Қараша</td>
+                            <td>Веб әзірлеу</td>
+                            <td>14:00 - 15:30</td>
+                            <td>208</td>
+                            <td>Нұрлан Сәрсенов</td>
+                            <td><span class="status-badge present">Қатысты</span></td>
+                        </tr>
+                        <tr>
+                            <td>31 Қазан</td>
+                            <td>Деректер қоры</td>
+                            <td>11:00 - 12:30</td>
+                            <td>412</td>
+                            <td>Айгүл Жұмабаева</td>
+                            <td><span class="status-badge late">Кешікті</span></td>
+                        </tr>
+                        <tr>
+                            <td>30 Қазан</td>
+                            <td>Жасанды интеллект</td>
+                            <td>13:00 - 14:30</td>
+                            <td>501</td>
+                            <td>Мақсат Бекболатов</td>
+                            <td><span class="status-badge present">Қатысты</span></td>
+                        </tr>
+                        <tr>
+                            <td>28 Қазан</td>
+                            <td>Мобильді қосымша</td>
+                            <td>09:00 - 10:30</td>
+                            <td>310</td>
+                            <td>Дәурен Қасымов</td>
+                            <td><span class="status-badge absent">Қатыспады</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Calendar View -->
+        <div class="calendar-card">
+            <div class="calendar-header">
+                <div class="chart-title">Қараша 2024</div>
+                <div class="calendar-nav">
+                    <button class="calendar-btn">◀</button>
+                    <button class="calendar-btn">▶</button>
+                </div>
+            </div>
+            
+            <div class="calendar-grid">
+                <!-- Days of week -->
+                <div class="calendar-day header">Дс</div>
+                <div class="calendar-day header">Сс</div>
+                <div class="calendar-day header">Ср</div>
+                <div class="calendar-day header">Бс</div>
+                <div class="calendar-day header">Жм</div>
+                <div class="calendar-day header">Сб</div>
+                <div class="calendar-day header">Жс</div>
+                
+                <!-- Days -->
+                <div class="calendar-day"></div>
+                <div class="calendar-day"></div>
+                <div class="calendar-day"></div>
+                <div class="calendar-day"></div>
+                <div class="calendar-day present">
+                    <div class="calendar-day-number">1</div>
+                    <div class="calendar-day-status">✓</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="calendar-day-number">2</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="calendar-day-number">3</div>
+                </div>
+                
+                <!-- Week 2 -->
+                <div class="calendar-day present today">
+                    <div class="calendar-day-number">4</div>
+                    <div class="calendar-day-status">✓</div>
+                </div>
+                <div class="calendar-day active">
+                    <div class="calendar-day-number">5</div>
+                </div>
+                <div class="calendar-day active">
+                    <div class="calendar-day-number">6</div>
+                </div>
+                <div class="calendar-day active">
+                    <div class="calendar-day-number">7</div>
+                </div>
+                <div class="calendar-day active">
+                    <div class="calendar-day-number">8</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="calendar-day-number">9</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="calendar-day-number">10</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const ctx1 = document.getElementById('attendanceChart').getContext('2d');
+        new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: ['Дс', 'Сс', 'Ср', 'Бс', 'Жм', 'Сб', 'Жс'],
+                datasets: [{
+                    label: 'Қатысу %',
+                    data: [100, 95, 100, 90, 100, 0, 0],
+                    borderColor: '#6366F1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#6366F1',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        const ctx2 = document.getElementById('subjectsChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: ['Программалау', 'Деректер қоры', 'Веб әзірлеу', 'AI', 'Мобильді'],
+                datasets: [{
+                    data: [98, 92, 95, 88, 90],
+                    backgroundColor: [
+                        '#6366F1',
+                        '#10B981',
+                        '#EC4899',
+                        '#8B5CF6',
+                        '#F59E0B'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

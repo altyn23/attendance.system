@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>QR Scanner - Attendance System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        :root {
+            --primary: #6366F1;
+            --primary-dark: #4F46E5;
+            --secondary: #22D3EE;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --dark: #1F2937;
+            --gray: #6B7280;
+            --light: #F9FAFB;
+            --white: #FFFFFF;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .navbar h1 {
+            color: white;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .nav-btn {
+            padding: 8px 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .scanner-container {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .scanner-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .scanner-header h2 {
+            color: var(--dark);
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .scanner-header p {
+            color: var(--gray);
+            font-size: 16px;
+        }
+        
+        .scanner-box {
+            position: relative;
+            width: 100%;
+            max-width: 350px;
+            height: 350px;
+            margin: 30px auto;
+            background: var(--light);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 20px;
+        }
+        
+        .scanner-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 250px;
+            border: 3px solid var(--primary);
+            border-radius: 20px;
+            pointer-events: none;
+        }
+        
+        .scanner-corners {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .corner {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--secondary);
+        }
+        
+        .corner.tl {
+            top: -2px;
+            left: -2px;
+            border-right: none;
+            border-bottom: none;
+            border-radius: 20px 0 0 0;
+        }
+        
+        .corner.tr {
+            top: -2px;
+            right: -2px;
+            border-left: none;
+            border-bottom: none;
+            border-radius: 0 20px 0 0;
+        }
+        
+        .corner.bl {
+            bottom: -2px;
+            left: -2px;
+            border-right: none;
+            border-top: none;
+            border-radius: 0 0 0 20px;
+        }
+        
+        .corner.br {
+            bottom: -2px;
+            right: -2px;
+            border-left: none;
+            border-top: none;
+            border-radius: 0 0 20px 0;
+        }
+        
+        .scanning-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--secondary), transparent);
+            animation: scan 2s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+        
+        .manual-input {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid var(--light);
+        }
+        
+        .manual-input h3 {
+            color: var(--dark);
+            margin-bottom: 15px;
+            font-size: 18px;
+            text-align: center;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .code-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+        
+        .code-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .submit-btn {
+            padding: 15px 30px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .submit-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+        
+        .submit-btn:disabled {
+            background: var(--gray);
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status-message {
+            margin-top: 20px;
+            padding: 15px 20px;
+            border-radius: 12px;
+            text-align: center;
+            display: none;
+            animation: slideUp 0.3s;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .status-message.success {
+            background: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #A7F3D0;
+            display: block;
+        }
+        
+        .status-message.error {
+            background: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #FECACA;
+            display: block;
+        }
+        
+        .status-message.info {
+            background: #DBEAFE;
+            color: #1E40AF;
+            border: 1px solid #BFDBFE;
+            display: block;
+        }
+        
+        .recent-scans {
+            margin-top: 40px;
+            background: var(--light);
+            border-radius: 15px;
+            padding: 25px;
+        }
+        
+        .recent-scans h3 {
+            color: var(--dark);
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        
+        .scan-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        
+        .scan-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .scan-info {
+            flex: 1;
+        }
+        
+        .scan-class {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+        
+        .scan-time {
+            font-size: 14px;
+            color: var(--gray);
+        }
+        
+        .scan-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .scan-status.present {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+        
+        .scan-status.late {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+        
+        .camera-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .control-btn {
+            padding: 12px 25px;
+            border: 2px solid var(--primary);
+            background: white;
+            color: var(--primary);
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .control-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .control-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .scanner-container {
+                padding: 20px;
+            }
+            
+            .scanner-box {
+                height: 300px;
+                max-width: 300px;
+            }
+            
+            .scanner-overlay {
+                width: 200px;
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>📷 QR Scanner</h1>
+        <div class="nav-links">
+            <a href="/dashboard" class="nav-btn">← Dashboard</a>
+            <a href="/my-attendance" class="nav-btn">Менің қатысуым</a>
+            <a href="/profile" class="nav-btn">Профиль</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="scanner-container">
+            <div class="scanner-header">
+                <h2>QR кодты сканерлеңіз</h2>
+                <p>Сабаққа қатысуды тіркеу үшін QR кодты камераға көрсетіңіз</p>
+            </div>
+            
+            <div class="scanner-box">
+                <video id="video" style="display: none;"></video>
+                <canvas id="canvas" style="display: none;"></canvas>
+                <div class="scanner-overlay">
+                    <div class="scanner-corners">
+                        <div class="corner tl"></div>
+                        <div class="corner tr"></div>
+                        <div class="corner bl"></div>
+                        <div class="corner br"></div>
+                    </div>
+                    <div class="scanning-line"></div>
+                </div>
+                <div id="placeholder" style="text-align: center; color: var(--gray);">
+                    <div style="font-size: 64px; margin-bottom: 10px;">📷</div>
+                    <p>Камераны іске қосу үшін төмендегі батырманы басыңыз</p>
+                </div>
+            </div>
+            
+            <div class="camera-controls">
+                <button class="control-btn" id="startBtn" onclick="startCamera()">
+                    🎥 Камераны қосу
+                </button>
+                <button class="control-btn" id="stopBtn" onclick="stopCamera()" style="display: none;">
+                    ⏹️ Тоқтату
+                </button>
+            </div>
+            
+            <div id="statusMessage" class="status-message"></div>
+            
+            <div class="manual-input">
+                <h3>Немесе кодты қолмен енгізіңіз</h3>
+                <div class="input-group">
+                    <input type="text" id="manualCode" class="code-input" placeholder="ABCD1234" maxlength="8">
+                    <button class="submit-btn" onclick="submitManualCode()">Жіберу</button>
+                </div>
+            </div>
+            
+            <div class="recent-scans">
+                <h3>Соңғы белгілер</h3>
+                <div id="recentScans">
+                    <p style="text-align: center; color: var(--gray);">Әзірге белгілер жоқ</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script>
+        let video = document.getElementById('video');
+        let canvas = document.getElementById('canvas');
+        let context = canvas.getContext('2d');
+        let scanning = false;
+        
+        function startCamera() {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(function(stream) {
+                    video.srcObject = stream;
+                    video.style.display = 'block';
+                    document.getElementById('placeholder').style.display = 'none';
+                    document.getElementById('startBtn').style.display = 'none';
+                    document.getElementById('stopBtn').style.display = 'block';
+                    video.play();
+                    scanning = true;
+                    requestAnimationFrame(scanQRCode);
+                })
+                .catch(function(error) {
+                    showMessage('Камераға қатынау мүмкін емес: ' + error.message, 'error');
+                });
+        }
+        
+        function stopCamera() {
+            scanning = false;
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+            video.style.display = 'none';
+            document.getElementById('placeholder').style.display = 'block';
+            document.getElementById('startBtn').style.display = 'block';
+            document.getElementById('stopBtn').style.display = 'none';
+        }
+        
+        function scanQRCode() {
+            if (video.readyState === video.HAVE_ENOUGH_DATA && scanning) {
+                canvas.height = video.videoHeight;
+                canvas.width = video.videoWidth;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                
+                if (code) {
+                    console.log('QR код табылды:', code.data);
+                    submitQRCode(code.data);
+                    scanning = false;
+                    stopCamera();
+                }
+            }
+            
+            if (scanning) {
+                requestAnimationFrame(scanQRCode);
+            }
+        }
+        
+        function submitQRCode(qrCode) {
+            showMessage('QR код өңделуде...', 'info');
+            
+            fetch('/api/qr/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ qrCode: qrCode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage(`✅ ${data.message} - ${data.className} (${data.room})`, 'success');
+                    addRecentScan(data.className, data.room, data.status);
+                } else {
+                    showMessage(`❌ ${data.error}`, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('Қате: ' + error.message, 'error');
+            });
+        }
+        
+        function submitManualCode() {
+            const code = document.getElementById('manualCode').value.trim();
+            if (code) {
+                submitQRCode(code);
+                document.getElementById('manualCode').value = '';
+            }
+        }
+        
+        function showMessage(message, type) {
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message ' + type;
+            
+            setTimeout(() => {
+                statusMessage.className = 'status-message';
+            }, 5000);
+        }
+        
+        function addRecentScan(className, room, status) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('kk-KZ', { hour: '2-digit', minute: '2-digit' });
+            const dateStr = now.toLocaleDateString('kk-KZ');
+            
+            const scanHtml = `
+                <div class="scan-item">
+                    <div class="scan-info">
+                        <div class="scan-class">${className} - ${room}</div>
+                        <div class="scan-time">${dateStr} ${timeStr}</div>
+                    </div>
+                    <span class="scan-status ${status.toLowerCase()}">${status === 'LATE' ? 'Кешіккен' : 'Қатысты'}</span>
+                </div>
+            `;
+            
+            const recentScans = document.getElementById('recentScans');
+            if (recentScans.querySelector('p')) {
+                recentScans.innerHTML = scanHtml;
+            } else {
+                recentScans.insertAdjacentHTML('afterbegin', scanHtml);
+            }
+        }
+        
+        document.getElementById('manualCode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitManualCode();
+            }
+        });
+    </script>
+</body>
+</html>
