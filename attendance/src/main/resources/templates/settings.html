@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Жүйе баптаулары</title>
+    <style>
+        :root { --bg-1:#102447; --bg-2:#1f3f7a; --panel:rgba(255,255,255,.92); --text:#0f172a; --muted:#64748b; --brand:#2257c7; --brand-2:#3b82f6; }
+        *{box-sizing:border-box;} body{margin:0;min-height:100vh;font-family:"Inter","Segoe UI",sans-serif;background:linear-gradient(135deg,var(--bg-1),var(--bg-2));color:var(--text);} 
+        .topbar{max-width:980px;margin:0 auto;padding:20px;display:flex;justify-content:space-between;color:#f8fafc}.link-btn{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.14);color:#fff;text-decoration:none;padding:9px 14px;border-radius:10px;font-weight:600}
+        .page{max-width:980px;margin:0 auto;padding:0 20px 26px}.panel{background:var(--panel);border-radius:18px;box-shadow:0 14px 34px rgba(2,6,23,.2);padding:18px}
+        h1{margin:0 0 8px}.muted{color:var(--muted);margin-bottom:12px}
+        .row{display:grid;grid-template-columns:1fr 180px auto;gap:10px}.row input,.row select{padding:10px 12px;border:1px solid #cfd9e5;border-radius:10px;font-size:14px}
+        .btn{border:none;border-radius:10px;padding:10px 14px;background:linear-gradient(90deg,var(--brand),var(--brand-2));color:#fff;font-weight:700;cursor:pointer}
+        #msg{margin-top:10px;color:#166534}
+        @media (max-width:680px){.row{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<header class="topbar"><div style="font-size:24px;font-weight:800;">Жүйе баптаулары</div><a href="/dashboard" class="link-btn">Басты бет</a></header>
+<main class="page">
+    <section class="panel">
+        <p class="muted">Тек әкімшіге қолжетімді параметрлер.</p>
+        <div class="row">
+            <input id="qrDuration" type="number" min="1" max="3600" value="15" placeholder="QR уақыты (секунд)">
+            <select id="qrDurationUnit" onchange="onUnitChange()">
+                <option value="seconds">Секунд</option>
+                <option value="minutes">Минут</option>
+            </select>
+            <button class="btn" onclick="save()">Сақтау</button>
+        </div>
+        <div id="msg"></div>
+    </section>
+</main>
+<script>
+    let qrDurationSeconds = 15;
+    let previousUnit = 'seconds';
+
+    async function load() {
+        const data = await fetch('/api/admin/settings').then(r => r.json());
+        if (data.qrCodeDuration) qrDurationSeconds = Number(data.qrCodeDuration) || 15;
+        renderDurationInput();
+    }
+
+    function onUnitChange() {
+        const unit = document.getElementById('qrDurationUnit').value;
+        const input = document.getElementById('qrDuration');
+        const currentValue = Number(input.value) || 0;
+
+        qrDurationSeconds = previousUnit === 'minutes' ? currentValue * 60 : currentValue;
+        previousUnit = unit;
+        renderDurationInput();
+    }
+
+    function renderDurationInput() {
+        const unit = document.getElementById('qrDurationUnit').value;
+        const input = document.getElementById('qrDuration');
+        if (unit === 'minutes') {
+            input.max = '60';
+            input.placeholder = 'QR уақыты (минут)';
+            input.value = Math.max(1, Math.round(qrDurationSeconds / 60));
+        } else {
+            input.max = '3600';
+            input.placeholder = 'QR уақыты (секунд)';
+            input.value = Math.max(1, qrDurationSeconds);
+        }
+        previousUnit = unit;
+    }
+
+    async function save() {
+        const unit = document.getElementById('qrDurationUnit').value;
+        const rawValue = Number(document.getElementById('qrDuration').value) || 1;
+        const seconds = unit === 'minutes' ? rawValue * 60 : rawValue;
+        const payload = { qrCodeDuration: Math.max(1, Math.min(seconds, 3600)) };
+        const data = await fetch('/api/admin/settings', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        }).then(r => r.json());
+        qrDurationSeconds = payload.qrCodeDuration;
+        renderDurationInput();
+        document.getElementById('msg').textContent = data.message || data.error || '';
+    }
+    load();
+</script>
+<script src="/js/app-prefs.js"></script>
+</body>
+</html>

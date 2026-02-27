@@ -24,7 +24,7 @@ public class QRSession {
     
     public QRSession() {
         this.createdAt = LocalDateTime.now();
-        this.expiresAt = LocalDateTime.now().plusMinutes(15); 
+        this.expiresAt = LocalDateTime.now().plusSeconds(15); 
         this.active = true;
         this.scannedStudentIds = new ArrayList<>();
     }

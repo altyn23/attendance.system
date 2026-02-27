@@ -24,7 +24,7 @@ public class HomeController {
     
     @GetMapping("/register")
     public String registerPage() {
-        return "register";
+        return "redirect:/login";
     }
 
     @GetMapping("/dashboard")
@@ -42,6 +42,17 @@ public class HomeController {
         model.addAttribute("newsList", newsRepository.findTop10ByOrderByCreatedAtDesc());
 
         return "dashboard";
+    }
+
+    @GetMapping("/platform-guide")
+    public String platformGuide(HttpSession session, Model model) {
+        String userId = (String) session.getAttribute("userId");
+        if (userId == null) {
+            return "redirect:/login";
+        }
+        model.addAttribute("fullName", session.getAttribute("fullName"));
+        model.addAttribute("role", session.getAttribute("role"));
+        return "platform-guide";
     }
 
     @GetMapping("/")

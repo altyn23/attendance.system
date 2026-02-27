@@ -8,9 +8,18 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class AttendanceApplication {
 
     public static void main(String[] args) {
-        // Загружаем .env
-        Dotenv dotenv = Dotenv.configure().load();
-        System.setProperty("MONGO_URI", dotenv.get("MONGO_URI"));
+        try {
+            Dotenv dotenv = Dotenv.configure()
+                    .ignoreIfMissing()
+                    .ignoreIfMalformed()
+                    .load();
+            String mongoUri = dotenv.get("MONGO_URI");
+            if (mongoUri != null && !mongoUri.isBlank()) {
+                System.setProperty("MONGO_URI", mongoUri);
+            }
+        } catch (Exception ignored) {
+            // Fallback to env vars / application.properties placeholder resolution.
+        }
 
         SpringApplication.run(AttendanceApplication.class, args);
     }

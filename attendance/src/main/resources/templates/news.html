@@ -2,520 +2,532 @@
 <html lang="kk" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Жаңалықтар - Attendance System</title>
+    <title>Жаңалықтар</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         :root {
-            --primary: #6366F1;
-            --primary-dark: #4F46E5;
-            --success: #10B981;
-            --danger: #EF4444;
-            --warning: #F59E0B;
-            --dark: #1F2937;
-            --gray: #6B7280;
-            --light: #F9FAFB;
+            --c-primary: #2e5ccd;
+            --c-primary-2: #4f46e5;
+            --c-teal: #0ea5e9;
+            --c-mint: #22c55e;
+            --c-amber: #f59e0b;
+            --c-rose: #ef4444;
+            --c-bg-1: #0b1530;
+            --c-bg-2: #132b66;
+            --c-surface: rgba(255,255,255,.92);
+            --c-text: #1f2937;
+            --c-muted: #64748b;
         }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             min-height: 100vh;
+            color: var(--c-text);
+            background: linear-gradient(130deg, var(--c-bg-1), var(--c-bg-2));
+            overflow-x: hidden;
         }
-        
+        .bg-shape {
+            position: fixed;
+            border-radius: 999px;
+            filter: blur(10px);
+            opacity: .35;
+            pointer-events: none;
+            animation: drift 9s ease-in-out infinite;
+            z-index: 0;
+        }
+        .bg-shape.s1 { width: 270px; height: 270px; top: 42px; right: 8%; background: radial-gradient(circle at 30% 30%, #22d3ee, #2563eb); }
+        .bg-shape.s2 { width: 340px; height: 340px; bottom: -100px; left: -70px; background: radial-gradient(circle at 30% 30%, #c084fc, #6366f1); animation-delay: 1.4s; }
+        .bg-shape.s3 { width: 220px; height: 220px; bottom: 120px; right: 22%; background: radial-gradient(circle at 30% 30%, #34d399, #0ea5e9); animation-delay: 2.2s; }
+        @keyframes drift {
+            0% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-14px) scale(1.04); }
+            100% { transform: translateY(0px) scale(1); }
+        }
+
         .navbar {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 15px 30px;
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 18px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            color: #fff;
         }
-        
-        .navbar h1 {
-            color: white;
-            font-size: 24px;
+        .navbar h1 { font-size: 24px; }
+        .nav-right { display: flex; gap: 10px; align-items: center; }
+        .nav-btn {
+            text-decoration: none;
+            color: #e5e7eb;
+            border: 1px solid rgba(255,255,255,.2);
+            background: rgba(255,255,255,.08);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 13px;
+            transition: transform .2s, background .2s;
         }
-        
-        .nav-right {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        
+        .nav-btn:hover { transform: translateY(-1px); background: rgba(255,255,255,.15); }
+
         .profile-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.3);
+            width: 38px;
+            height: 38px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.2);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,.2);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-weight: bold;
             cursor: pointer;
+            font-weight: 700;
             position: relative;
         }
-        
         .profile-menu {
             position: absolute;
-            top: 50px;
+            top: 48px;
             right: 0;
-            background: white;
-            border-radius: 10px;
-            padding: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            width: 200px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 16px 34px rgba(0,0,0,.2);
+            padding: 8px;
             display: none;
-            min-width: 200px;
-            z-index: 1000;
+            z-index: 10;
         }
-        
-        .profile-menu.show {
-            display: block;
-        }
-        
+        .profile-menu.show { display: block; }
         .profile-menu a {
             display: block;
             padding: 10px;
-            color: var(--dark);
+            border-radius: 8px;
             text-decoration: none;
-            border-radius: 5px;
+            color: #334155;
+            font-size: 14px;
         }
-        
-        .profile-menu a:hover {
-            background: var(--light);
-        }
-        
-        .nav-btn {
-            padding: 8px 20px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 10px;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-        
-        .nav-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-        
+        .profile-menu a:hover { background: #f1f5f9; }
+
         .container {
+            position: relative;
+            z-index: 1;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 0 20px 24px;
         }
-        
         .page-header {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: var(--c-surface);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 14px;
+            box-shadow: 0 18px 38px rgba(3,9,28,.24);
         }
-        
+        .page-header h2 { color: var(--c-text); }
         .header-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 10px;
             flex-wrap: wrap;
-            gap: 20px;
         }
-        
-        .header-content h2 {
-            color: var(--dark);
-            font-size: 32px;
-        }
-        
+        .header-content h2 { font-size: 28px; }
         .btn {
-            padding: 10px 20px;
             border: none;
             border-radius: 10px;
-            font-weight: 600;
+            padding: 10px 14px;
             cursor: pointer;
-            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 13px;
         }
-        
         .btn-primary {
-            background: var(--primary);
-            color: white;
+            background: linear-gradient(90deg, var(--c-primary), var(--c-primary-2));
+            color: #fff;
         }
-        
-        .btn-primary:hover {
-            background: var(--primary-dark);
-        }
-        
+
         .news-grid {
             display: grid;
-            gap: 25px;
+            gap: 12px;
         }
-        
         .news-card {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
+            background: var(--c-surface);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 14px 30px rgba(3,9,28,.18);
+            transition: transform .22s, box-shadow .22s;
         }
-        
         .news-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 36px rgba(3,9,28,.24);
         }
-        
         .news-header {
             display: flex;
             justify-content: space-between;
-            align-items: start;
-            margin-bottom: 20px;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 10px;
         }
-        
-        .news-title {
-            color: var(--dark);
-            font-size: 24px;
-            font-weight: 600;
-            flex: 1;
-        }
-        
-        .news-date {
-            color: var(--gray);
-            font-size: 14px;
-            white-space: nowrap;
-        }
-        
+        .news-title { font-size: 20px; font-weight: 700; }
+        .news-date { color: var(--c-muted); font-size: 12px; white-space: nowrap; }
         .news-content {
-            color: #4B5563;
-            line-height: 1.6;
-            margin-bottom: 20px;
+            color: #334155;
+            font-size: 14px;
+            line-height: 1.65;
+            margin-bottom: 12px;
         }
-        
         .news-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-top: 20px;
-            border-top: 1px solid #E5E7EB;
+            gap: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e4ebf5;
         }
-        
         .news-author {
             display: flex;
             align-items: center;
-            gap: 10px;
-            color: var(--gray);
-            font-size: 14px;
+            gap: 8px;
+            color: var(--c-muted);
+            font-size: 13px;
         }
-        
         .author-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            background: linear-gradient(120deg, var(--c-primary), var(--c-teal));
+            color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
-            font-weight: bold;
+            font-size: 12px;
+            font-weight: 700;
         }
-        
-        .news-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
+        .news-actions { display: flex; gap: 6px; }
         .action-btn {
-            padding: 5px 10px;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
+            background: #eef2ff;
+            color: #334155;
+            padding: 7px 9px;
             cursor: pointer;
-            transition: all 0.3s;
-            background: var(--light);
-            color: var(--gray);
+            font-size: 12px;
+            font-weight: 600;
         }
-        
-        .action-btn:hover {
-            background: #E5E7EB;
+        .action-btn:hover { background: #dfe7ff; }
+
+        .empty-state {
+            background: var(--c-surface);
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 14px 30px rgba(3,9,28,.2);
         }
-        
+        .empty-title { font-size: 24px; margin-bottom: 6px; }
+        .empty-text { color: var(--c-muted); }
+
         .modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
+            inset: 0;
+            background: rgba(15,23,42,.45);
             justify-content: center;
             align-items: center;
             z-index: 2000;
+            padding: 16px;
         }
-        
-        .modal.show {
-            display: flex;
-        }
-        
+        .modal.show { display: flex; }
         .modal-content {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 600px;
-            width: 90%;
+            width: min(620px, 100%);
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 24px 45px rgba(0,0,0,.24);
         }
-        
-        .modal-header {
-            margin-bottom: 20px;
-        }
-        
-        .modal-header h3 {
-            color: var(--dark);
-            font-size: 24px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: var(--dark);
-            font-weight: 500;
-        }
-        
+        .modal-header { margin-bottom: 14px; }
+        .modal-header h3 { font-size: 22px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; margin-bottom: 6px; color: #334155; font-size: 13px; font-weight: 600; }
         .form-group input,
         .form-group textarea {
             width: 100%;
-            padding: 10px;
-            border: 2px solid #E5E7EB;
+            border: 1px solid #dbe4f0;
             border-radius: 10px;
-            font-size: 16px;
+            padding: 10px 12px;
+            font-size: 14px;
+            outline: none;
         }
-        
-        .form-group textarea {
-            resize: vertical;
-            min-height: 150px;
+        .form-group textarea { resize: vertical; min-height: 140px; }
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79,70,229,.12);
         }
-        
         .modal-footer {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             justify-content: flex-end;
-            margin-top: 20px;
+            margin-top: 10px;
         }
-        
-        .empty-state {
-            background: white;
-            border-radius: 20px;
-            padding: 60px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+
+        @media (max-width: 720px) {
+            .navbar { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .header-content h2 { font-size: 22px; }
+            .news-header { flex-direction: column; }
+            .news-date { white-space: normal; }
         }
-        
-        .empty-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
+
+        html[data-theme="dark"] .page-header,
+        html[data-theme="dark"] .news-card,
+        html[data-theme="dark"] .empty-state,
+        html[data-theme="dark"] .modal-content,
+        html[data-theme="dark"] .profile-menu {
+            background: #111827 !important;
+            border: 1px solid #263244;
         }
-        
-        .empty-title {
-            color: var(--dark);
-            font-size: 24px;
-            margin-bottom: 10px;
+        html[data-theme="dark"] .page-header h2,
+        html[data-theme="dark"] .news-title,
+        html[data-theme="dark"] .news-content,
+        html[data-theme="dark"] .empty-title,
+        html[data-theme="dark"] .modal-header h3,
+        html[data-theme="dark"] .form-group label,
+        html[data-theme="dark"] .profile-menu a {
+            color: #e5e7eb !important;
         }
-        
-        .empty-text {
-            color: var(--gray);
+        html[data-theme="dark"] .empty-text,
+        html[data-theme="dark"] .news-date,
+        html[data-theme="dark"] .news-author {
+            color: #94a3b8 !important;
+        }
+        html[data-theme="dark"] .news-footer { border-top-color: #334155; }
+        html[data-theme="dark"] .action-btn {
+            background: #1e293b;
+            color: #e5e7eb;
+        }
+        html[data-theme="dark"] .action-btn:hover { background: #334155; }
+        html[data-theme="dark"] .form-group input,
+        html[data-theme="dark"] .form-group textarea {
+            background: #0f172a;
+            color: #e5e7eb;
+            border-color: #334155;
+        }
+        html[data-theme="light"] .page-header h2,
+        html[data-theme="light"] .news-title,
+        html[data-theme="light"] .empty-title,
+        html[data-theme="light"] .news-content {
+            color: #1f2937 !important;
         }
     </style>
 </head>
 <body>
-    <div class="navbar">
-        <h1>📰 Жаңалықтар</h1>
-        <div class="nav-right">
-            <a href="/dashboard" class="nav-btn">📊 Dashboard</a>
-            <div class="profile-icon" onclick="toggleProfile()" th:text="${#strings.substring(fullName, 0, 1)}">A</div>
-            <div class="profile-menu" id="profileMenu">
-                <a href="/profile">👤 Менің профилім</a>
-                <a href="/settings">⚙️ Баптаулар</a>
-                <a href="#" onclick="logout()">🚪 Шығу</a>
-            </div>
+<div class="bg-shape s1"></div>
+<div class="bg-shape s2"></div>
+<div class="bg-shape s3"></div>
+
+<div class="navbar">
+    <h1>Жаңалықтар</h1>
+    <div class="nav-right">
+        <a href="/dashboard" class="nav-btn">Басты бет</a>
+        <div class="profile-icon" onclick="toggleProfile()" th:text="${#strings.substring(fullName, 0, 1)}">A</div>
+        <div class="profile-menu" id="profileMenu">
+            <a href="/profile">Менің профилім</a>
+            <a href="#" onclick="logout()">Шығу</a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="page-header">
+        <div class="header-content">
+            <h2>Университет жаңалықтары</h2>
+            <button class="btn btn-primary" onclick="openAddModal()" th:if="${role == 'ADMIN'}">Жаңалық қосу</button>
         </div>
     </div>
 
-    <div class="container">
-        <div class="page-header">
-            <div class="header-content">
-                <h2>Университет жаңалықтары</h2>
-                <button class="btn btn-primary" onclick="openAddModal()" th:if="${role == 'ADMIN'}">
-                    ➕ Жаңалық қосу
-                </button>
+    <div class="news-grid" id="newsGrid"></div>
+
+    <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-title">Жаңалықтар жоқ</div>
+        <div class="empty-text">Әзірге жаңалықтар жарияланбаған</div>
+    </div>
+</div>
+
+<div class="modal" id="newsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Жаңа жаңалық қосу</h3>
+        </div>
+        <form id="newsForm">
+            <div class="form-group">
+                <label>Тақырып *</label>
+                <input type="text" id="title" required>
             </div>
-        </div>
-
-        <div class="news-grid" id="newsGrid">
-            <!-- News will be loaded here -->
-        </div>
-
-        <div class="empty-state" id="emptyState" style="display: none;">
-            <div class="empty-icon">📰</div>
-            <div class="empty-title">Жаңалықтар жоқ</div>
-            <div class="empty-text">Әзірге жаңалықтар жарияланбаған</div>
+            <div class="form-group">
+                <label>Мазмұны *</label>
+                <textarea id="content" required placeholder="Жаңалық мәтінін енгізіңіз..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Автор</label>
+                <input type="text" id="author" placeholder="мысалы: Деканат">
+            </div>
+        </form>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="saveNews()">Жариялау</button>
+            <button class="btn" onclick="closeModal()">Болдырмау</button>
         </div>
     </div>
+</div>
 
-    <!-- Add News Modal -->
-    <div class="modal" id="newsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Жаңа жаңалық қосу</h3>
-            </div>
-            <form id="newsForm">
-                <div class="form-group">
-                    <label>Тақырып *</label>
-                    <input type="text" id="title" required>
-                </div>
-                <div class="form-group">
-                    <label>Мазмұны *</label>
-                    <textarea id="content" required placeholder="Жаңалық мәтінін енгізіңіз..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Автор</label>
-                    <input type="text" id="author" placeholder="мысалы: Деканат">
-                </div>
-            </form>
-            <div class="modal-footer">
-                <button class="btn btn-primary" onclick="saveNews()">Жариялау</button>
-                <button class="btn" onclick="closeModal()">Болдырмау</button>
-            </div>
-        </div>
-    </div>
+<script th:inline="javascript">
+    let news = [];
+    const userRole = /*[[${role}]]*/ 'STUDENT';
+    const i18n = {
+        kz: {
+            admin: 'Әкімшілік',
+            delete: 'Жою',
+            published: 'Жаңалық сәтті жарияланды',
+            genericError: 'Қате орын алды',
+            serverError: 'Серверге қосылу қатесі',
+            confirmDelete: 'Жаңалықты жоюға сенімдісіз бе?',
+            deleted: 'Жаңалық жойылды',
+            deleteError: 'Жою кезінде қате орын алды'
+        },
+        ru: {
+            admin: 'Администрация',
+            delete: 'Удалить',
+            published: 'Новость успешно опубликована',
+            genericError: 'Произошла ошибка',
+            serverError: 'Ошибка подключения к серверу',
+            confirmDelete: 'Вы уверены, что хотите удалить новость?',
+            deleted: 'Новость удалена',
+            deleteError: 'Ошибка при удалении'
+        }
+    };
 
-    <script>
-        let news = [];
-        const userRole = '[[${role}]]';
+    function currentLang() {
+        return localStorage.getItem('lang') === 'ru' ? 'ru' : 'kz';
+    }
 
-        async function loadNews() {
-            try {
-                const response = await fetch('/api/news');
-                news = await response.json();
-                displayNews();
-            } catch (error) {
-                console.error('Error loading news:', error);
-            }
+    function tr(key) {
+        const lang = currentLang();
+        return i18n[lang][key];
+    }
+
+    async function loadNews() {
+        try {
+            const response = await fetch('/api/news');
+            news = await response.json();
+            displayNews();
+        } catch (error) {
+            console.error('Error loading news:', error);
+        }
+    }
+
+    function displayNews() {
+        const grid = document.getElementById('newsGrid');
+        const emptyState = document.getElementById('emptyState');
+
+        if (!Array.isArray(news) || news.length === 0) {
+            grid.style.display = 'none';
+            emptyState.style.display = 'block';
+            return;
         }
 
-        function displayNews() {
-            const grid = document.getElementById('newsGrid');
-            const emptyState = document.getElementById('emptyState');
-            
-            if (news.length === 0) {
-                grid.style.display = 'none';
-                emptyState.style.display = 'block';
-                return;
-            }
-            
-            grid.style.display = 'grid';
-            emptyState.style.display = 'none';
-            grid.innerHTML = '';
-            
-            news.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'news-card';
-                
-                const date = new Date(item.createdAt);
-                const formattedDate = date.toLocaleDateString('kk-KZ', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-                
-                const authorInitial = (item.author || 'А').charAt(0).toUpperCase();
-                
-                card.innerHTML = `
-                    <div class="news-header">
-                        <div class="news-title">${item.title}</div>
-                        <div class="news-date">${formattedDate}</div>
-                    </div>
-                    <div class="news-content">${item.content}</div>
-                    <div class="news-footer">
-                        <div class="news-author">
-                            <div class="author-avatar">${authorInitial}</div>
-                            <span>${item.author || 'Әкімшілік'}</span>
-                        </div>
-                        ${userRole === 'ADMIN' ? `
-                        <div class="news-actions">
-                            <button class="action-btn" onclick="editNews(${item.id})">✏️</button>
-                            <button class="action-btn" onclick="deleteNews(${item.id})">🗑️</button>
-                        </div>
-                        ` : ''}
-                    </div>
-                `;
-                grid.appendChild(card);
+        grid.style.display = 'grid';
+        emptyState.style.display = 'none';
+        grid.innerHTML = '';
+
+        news.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'news-card';
+
+            const date = item.createdAt ? new Date(item.createdAt) : new Date();
+            const formattedDate = date.toLocaleDateString(currentLang() === 'ru' ? 'ru-RU' : 'kk-KZ', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
             });
+
+            const author = item.author || tr('admin');
+            const authorInitial = author.charAt(0).toUpperCase();
+            const itemId = item.id || item._id;
+
+            card.innerHTML = `
+                <div class="news-header">
+                    <div class="news-title">${item.title || ''}</div>
+                    <div class="news-date">${formattedDate}</div>
+                </div>
+                <div class="news-content">${item.content || ''}</div>
+                <div class="news-footer">
+                    <div class="news-author">
+                        <div class="author-avatar">${authorInitial}</div>
+                        <span>${author}</span>
+                    </div>
+                    ${userRole === 'ADMIN' && itemId ? `
+                    <div class="news-actions">
+                        <button class="action-btn" onclick="deleteNews('${itemId}')">${tr('delete')}</button>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function openAddModal() {
+        document.getElementById('newsForm').reset();
+        document.getElementById('newsModal').classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('newsModal').classList.remove('show');
+    }
+
+    async function saveNews() {
+        const newsData = {
+            title: document.getElementById('title').value,
+            content: document.getElementById('content').value,
+            author: document.getElementById('author').value || tr('admin')
+        };
+
+        try {
+            const response = await fetch('/api/news', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newsData)
+            });
+
+            if (response.ok) {
+                alert(tr('published'));
+                closeModal();
+                loadNews();
+            } else {
+                alert(tr('genericError'));
+            }
+        } catch (error) {
+            alert(tr('serverError'));
         }
+    }
 
-        function openAddModal() {
-            document.getElementById('newsForm').reset();
-            document.getElementById('newsModal').classList.add('show');
-        }
-
-        function closeModal() {
-            document.getElementById('newsModal').classList.remove('show');
-        }
-
-        async function saveNews() {
-            const newsData = {
-                title: document.getElementById('title').value,
-                content: document.getElementById('content').value,
-                author: document.getElementById('author').value || 'Әкімшілік'
-            };
-
+    async function deleteNews(id) {
+        if (confirm(tr('confirmDelete'))) {
             try {
-                const response = await fetch('/api/news', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newsData)
-                });
-
-                if (response.ok) {
-                    alert('Жаңалық сәтті жарияланды!');
-                    closeModal();
-                    loadNews();
-                } else {
-                    alert('Қате орын алды');
-                }
+                await fetch(`/api/news/${id}`, { method: 'DELETE' });
+                alert(tr('deleted'));
+                loadNews();
             } catch (error) {
-                alert('Серверге қосылу қатесі');
+                alert(tr('deleteError'));
             }
         }
+    }
 
-        async function deleteNews(id) {
-            if (confirm('Жаңалықты жоюға сенімдісіз бе?')) {
-                try {
-                    await fetch(`/api/news/${id}`, { method: 'DELETE' });
-                    alert('Жаңалық жойылды');
-                    loadNews();
-                } catch (error) {
-                    alert('Жою кезінде қате орын алды');
-                }
-            }
-        }
+    function toggleProfile() {
+        document.getElementById('profileMenu').classList.toggle('show');
+    }
 
-        function toggleProfile() {
-            document.getElementById('profileMenu').classList.toggle('show');
-        }
+    function logout() {
+        fetch('/api/auth/logout', { method: 'POST' })
+            .then(() => window.location.href = '/login');
+    }
 
-        function logout() {
-            fetch('/api/auth/logout', { method: 'POST' })
-                .then(() => window.location.href = '/login');
-        }
-
-        loadNews();
-    </script>
+    loadNews();
+</script>
+<script src="/js/app-prefs.js"></script>
 </body>
 </html>

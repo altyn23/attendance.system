@@ -1,8 +1,10 @@
 package com.altynai.attendance.account;
 
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.*;
 
 @RestController
@@ -14,105 +16,144 @@ public class UserController {
 
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-    @PostMapping("/register")
-    public Map<String, String> register(@RequestBody Map<String, String> req) {
-        Map<String, String> res = new HashMap<>();
-        String email = req.get("email");
-        String firstName = req.get("firstName");
-        String lastName = req.get("lastName");
-        String password = req.get("password");
-
-        if (email == null || password == null || firstName == null || lastName == null) {
-            res.put("error", "Барлық өрістерді толтырыңыз");
-            return res;
-        }
-
-        if (userRepository.findByEmail(email).isPresent()) {
-            res.put("error", "Бұл email тіркелген");
-            return res;
-        }
-
-        User user = new User();
-        user.setEmail(email);
-        user.setFirstName(firstName);
-        user.setLastName(lastName);
-        user.setPasswordHash(encoder.encode(password));
-        userRepository.save(user);
-
-        res.put("message", "Тіркелу сәтті өтті");
-        return res;
-    }
-
-    @PostMapping("/login")
-    public Map<String, String> login(@RequestBody Map<String, String> req) {
-        Map<String, String> res = new HashMap<>();
-        String email = req.get("email");
-        String password = req.get("password");
-
-        Optional<User> opt = userRepository.findByEmail(email);
-        if (opt.isEmpty()) {
-            res.put("error", "Мұндай қолданушы жоқ");
-            return res;
-        }
-
-        User user = opt.get();
-        if (!encoder.matches(password, user.getPasswordHash())) {
-            res.put("error", "Қате құпиясөз");
-            return res;
-        }
-
-        res.put("message", "Кіру сәтті өтті");
-        res.put("role", user.getRole());
-        return res;
+    private boolean isAdmin(HttpSession session) {
+        return "ADMIN".equals(session.getAttribute("role"));
     }
 
     @GetMapping
-    public List<User> getAll(@RequestParam(required = false) String q) {
+    public Object getAll(@RequestParam(required = false) String q, HttpSession session) {
+        if (!isAdmin(session)) {
+            return Map.of("error", "Unauthorized");
+        }
+
         List<User> all = userRepository.findAll();
         if (q != null && !q.isEmpty()) {
+            String query = q.toLowerCase();
             all = all.stream()
-                    .filter(u -> u.getFullName().toLowerCase().contains(q.toLowerCase()) ||
-                                 u.getEmail().toLowerCase().contains(q.toLowerCase()))
+                    .filter(u -> u.getFullName().toLowerCase().contains(query) ||
+                                 u.getEmail().toLowerCase().contains(query))
                     .toList();
         }
         return all;
     }
 
+    @PostMapping
+    public Map<String, Object> create(@RequestBody User reqUser, HttpSession session) {
+        Map<String, Object> res = new HashMap<>();
+        if (!isAdmin(session)) {
+            res.put("error", "Unauthorized");
+            return res;
+        }
+
+        if (reqUser.getEmail() == null || reqUser.getEmail().isBlank()
+                || reqUser.getFirstName() == null || reqUser.getFirstName().isBlank()
+                || reqUser.getLastName() == null || reqUser.getLastName().isBlank()
+                || reqUser.getPasswordHash() == null || reqUser.getPasswordHash().isBlank()) {
+            res.put("error", "Барлық міндетті өрістерді толтырыңыз");
+            return res;
+        }
+
+        if (userRepository.findByEmail(reqUser.getEmail()).isPresent()) {
+            res.put("error", "Бұл email тіркелген");
+            return res;
+        }
+
+        User user = new User();
+        user.setFirstName(reqUser.getFirstName());
+        user.setLastName(reqUser.getLastName());
+        user.setEmail(reqUser.getEmail());
+        user.setPhone(reqUser.getPhone());
+        user.setRole(resolveRole(reqUser.getRole()));
+        user.setGroup(reqUser.getGroup());
+        user.setDepartment(reqUser.getDepartment());
+        user.setPasswordHash(encoder.encode(reqUser.getPasswordHash()));
+        user.setRegistrationDate(java.time.LocalDateTime.now());
+
+        user = userRepository.save(user);
+        res.put("success", true);
+        res.put("user", user);
+        return res;
+    }
+
     @PutMapping("/{id}")
-    public User update(@PathVariable String id, @RequestBody User newUser) {
-        return userRepository.findById(id).map(u -> {
+    public Map<String, Object> update(@PathVariable String id, @RequestBody User newUser, HttpSession session) {
+        Map<String, Object> res = new HashMap<>();
+        if (!isAdmin(session)) {
+            res.put("error", "Unauthorized");
+            return res;
+        }
+
+        Optional<User> updated = userRepository.findById(id).map(u -> {
+            if (newUser.getEmail() != null && !newUser.getEmail().isBlank()
+                    && !newUser.getEmail().equalsIgnoreCase(u.getEmail())
+                    && userRepository.findByEmail(newUser.getEmail()).isPresent()) {
+                return null;
+            }
+
             u.setFirstName(newUser.getFirstName());
             u.setLastName(newUser.getLastName());
             u.setEmail(newUser.getEmail());
-            if (newUser.getPasswordHash() != null)
+            u.setPhone(newUser.getPhone());
+            u.setRole(resolveRole(newUser.getRole()));
+            u.setGroup(newUser.getGroup());
+            u.setDepartment(newUser.getDepartment());
+            if (newUser.getPasswordHash() != null && !newUser.getPasswordHash().isBlank()) {
                 u.setPasswordHash(encoder.encode(newUser.getPasswordHash()));
+            }
             return userRepository.save(u);
-        }).orElseThrow();
+        }).filter(Objects::nonNull);
+        if (updated.isEmpty()) {
+            res.put("error", "Қолданушы табылмады немесе email қолданыста");
+            return res;
+        }
+
+        res.put("success", true);
+        res.put("user", updated.get());
+        return res;
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable String id) {
+    public Map<String, Object> delete(@PathVariable String id, HttpSession session) {
+        Map<String, Object> res = new HashMap<>();
+        if (!isAdmin(session)) {
+            res.put("error", "Unauthorized");
+            return res;
+        }
+        if (!userRepository.existsById(id)) {
+            res.put("error", "Қолданушы табылмады");
+            return res;
+        }
+
         userRepository.deleteById(id);
+        res.put("success", true);
+        return res;
     }
 
     @PostMapping("/reset")
     public Map<String, String> reset(@RequestBody Map<String, String> req) {
         Map<String, String> res = new HashMap<>();
         String email = req.get("email");
-
-        Optional<User> opt = userRepository.findByEmail(email);
-        if (opt.isEmpty()) {
-            res.put("error", "Қолданушы табылмады");
+        if (email == null || email.isBlank()) {
+            res.put("error", "Email енгізіңіз");
             return res;
         }
 
-        User user = opt.get();
-        String code = String.valueOf(new Random().nextInt(100000, 999999));
-        user.setResetCode(code);
-        user.setResetCodeExpires(System.currentTimeMillis() + 10 * 60 * 1000);
-        userRepository.save(user);
+        userRepository.findByEmail(email).ifPresent(user -> {
+            String code = String.valueOf(new Random().nextInt(100000, 999999));
+            user.setResetCode(code);
+            user.setResetCodeExpires(System.currentTimeMillis() + 10 * 60 * 1000);
+            userRepository.save(user);
+        });
 
-        res.put("message", "Қалпына келтіру коды: " + code);
+        // Avoid account enumeration and leaking reset code in API responses.
+        res.put("message", "Егер email бар болса, қалпына келтіру коды жіберілді");
         return res;
+    }
+
+    private String resolveRole(String role) {
+        if ("ADMIN".equals(role) || "TEACHER".equals(role) || "STUDENT".equals(role)) {
+            return role;
+        }
+        return "STUDENT";
     }
 }

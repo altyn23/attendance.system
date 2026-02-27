@@ -2,225 +2,272 @@
 <html lang="kk" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Сабақ кестесі - Attendance System</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Сабақ кестесі</title>
     <style>
         :root {
-            --primary: #6366F1;
-            --primary-dark: #4F46E5;
-            --secondary: #22D3EE;
-            --success: #10B981;
-            --danger: #EF4444;
-            --warning: #F59E0B;
-            --dark: #1F2937;
-            --gray: #6B7280;
-            --light: #F9FAFB;
-            --white: #FFFFFF;
+            --c-primary: #2e5ccd;
+            --c-primary-2: #4f46e5;
+            --c-teal: #0ea5e9;
+            --c-mint: #22c55e;
+            --c-amber: #f59e0b;
+            --c-rose: #ef4444;
+            --c-bg-1: #0b1530;
+            --c-bg-2: #132b66;
+            --c-surface: rgba(255, 255, 255, 0.9);
+            --c-text: #1f2937;
+            --c-muted: #64748b;
+            --radius: 16px;
         }
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             min-height: 100vh;
+            color: var(--c-text);
+            background: linear-gradient(130deg, var(--c-bg-1), var(--c-bg-2));
+            overflow-x: hidden;
         }
-        
+
+        .bg-shape {
+            position: fixed;
+            border-radius: 999px;
+            filter: blur(10px);
+            opacity: .35;
+            pointer-events: none;
+            animation: drift 9s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        .bg-shape.s1 {
+            width: 260px;
+            height: 260px;
+            top: 40px;
+            right: 6%;
+            background: radial-gradient(circle at 30% 30%, #22d3ee, #2563eb);
+        }
+
+        .bg-shape.s2 {
+            width: 320px;
+            height: 320px;
+            bottom: -90px;
+            left: -50px;
+            background: radial-gradient(circle at 30% 30%, #c084fc, #6366f1);
+            animation-delay: 1.5s;
+        }
+
+        .bg-shape.s3 {
+            width: 210px;
+            height: 210px;
+            bottom: 100px;
+            right: 20%;
+            background: radial-gradient(circle at 30% 30%, #34d399, #0ea5e9);
+            animation-delay: 2.3s;
+        }
+
+        @keyframes drift {
+            0% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-14px) scale(1.04); }
+            100% { transform: translateY(0px) scale(1); }
+        }
+
         .navbar {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 15px 30px;
+            position: relative;
+            z-index: 1;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 18px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            color: #fff;
         }
-        
+
         .navbar h1 {
-            color: white;
             font-size: 24px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-weight: 700;
         }
-        
+
         .nav-links {
             display: flex;
-            gap: 15px;
+            gap: 10px;
         }
-        
+
         .nav-btn {
-            padding: 8px 20px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 10px;
             text-decoration: none;
-            transition: all 0.3s;
-            font-size: 14px;
-            font-weight: 500;
+            color: #e5e7eb;
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,.2);
+            background: rgba(255,255,255,.08);
+            transition: transform .2s, background .2s;
+            font-size: 13px;
         }
-        
+
         .nav-btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-2px);
+            transform: translateY(-1px);
+            background: rgba(255,255,255,.16);
         }
-        
+
         .container {
-            max-width: 1400px;
+            position: relative;
+            z-index: 1;
+            max-width: 1280px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 0 20px 28px;
         }
-        
+
+        .panel {
+            background: var(--c-surface);
+            border-radius: var(--radius);
+            box-shadow: 0 20px 44px rgba(3, 9, 28, .24);
+            backdrop-filter: blur(8px);
+        }
+
         .schedule-header {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-            display: flex;
-            justify-content: space-between;
+            padding: 22px;
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 14px;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
+            margin-bottom: 14px;
+            animation: reveal .4s ease both;
         }
-        
-        .header-title {
-            flex: 1;
+
+        @keyframes reveal {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        
+
         .header-title h2 {
-            color: var(--dark);
-            font-size: 32px;
-            margin-bottom: 10px;
+            font-size: 28px;
+            margin-bottom: 4px;
         }
-        
+
         .header-title p {
-            color: var(--gray);
-            font-size: 16px;
+            color: var(--c-muted);
+            font-size: 14px;
         }
-        
+
         .week-selector {
             display: flex;
             align-items: center;
-            gap: 15px;
-            background: var(--light);
-            padding: 10px 20px;
-            border-radius: 15px;
-        }
-        
-        .week-btn {
-            width: 40px;
-            height: 40px;
-            border: none;
-            background: white;
-            border-radius: 10px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            transition: all 0.3s;
-        }
-        
-        .week-btn:hover {
-            background: var(--primary);
-            color: white;
-            transform: scale(1.1);
-        }
-        
-        .week-text {
-            font-weight: 600;
-            color: var(--dark);
-            min-width: 150px;
-            text-align: center;
-        }
-        
-        .view-toggle {
-            display: flex;
-            gap: 10px;
-            background: var(--light);
-            padding: 5px;
+            gap: 8px;
+            padding: 6px;
             border-radius: 12px;
+            background: #eef3ff;
         }
-        
-        .view-btn {
-            padding: 10px 20px;
+
+        .week-btn {
+            width: 34px;
+            height: 34px;
             border: none;
-            background: transparent;
-            color: var(--gray);
             border-radius: 8px;
             cursor: pointer;
-            font-weight: 500;
-            transition: all 0.3s;
+            color: #fff;
+            background: linear-gradient(90deg, var(--c-primary), var(--c-primary-2));
         }
-        
-        .view-btn.active {
-            background: white;
-            color: var(--primary);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        /* Weekly View */
-        .weekly-schedule {
-            display: grid;
-            grid-template-columns: 100px repeat(6, 1fr);
-            gap: 15px;
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-        }
-        
-        .time-slot {
-            font-weight: 600;
-            color: var(--gray);
-            padding: 20px 10px;
-            text-align: center;
-            border-right: 2px solid var(--light);
-        }
-        
-        .day-header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 15px;
-            border-radius: 12px;
+
+        .week-text {
+            min-width: 150px;
             text-align: center;
             font-weight: 600;
-            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
+            color: #334155;
+            font-size: 13px;
         }
-        
-        .day-header .day-name {
-            font-size: 16px;
-            margin-bottom: 5px;
-        }
-        
-        .day-header .day-date {
-            font-size: 12px;
-            opacity: 0.9;
-        }
-        
-        .class-slot {
-            grid-column: span 1;
-            background: var(--light);
+
+        .view-toggle {
+            display: flex;
+            gap: 6px;
+            background: #eef3ff;
             border-radius: 12px;
-            padding: 15px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s;
+            padding: 5px;
+        }
+
+        .view-btn {
+            border: none;
+            padding: 9px 14px;
+            border-radius: 9px;
+            font-size: 13px;
             cursor: pointer;
-            min-height: 100px;
+            color: #475569;
+            background: transparent;
         }
-        
+
+        .view-btn.active {
+            color: #fff;
+            background: linear-gradient(90deg, var(--c-primary), var(--c-teal));
+        }
+
+        .weekly-schedule {
+            padding: 18px;
+            display: grid;
+            grid-template-columns: 90px repeat(6, minmax(0, 1fr));
+            gap: 10px;
+            animation: reveal .45s ease both;
+        }
+
+        .weekly-schedule.hidden {
+            display: none;
+        }
+
+        .time-slot {
+            text-align: center;
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 600;
+            border-right: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px 6px;
+            background: rgba(241,245,249,.9);
+        }
+
+        .day-header {
+            padding: 10px;
+            border-radius: 12px;
+            color: #fff;
+            text-align: center;
+            background: linear-gradient(100deg, #2563eb, #0ea5e9);
+            box-shadow: 0 8px 18px rgba(37, 99, 235, .28);
+        }
+
+        .day-header .day-name {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .day-header .day-date {
+            font-size: 11px;
+            opacity: .9;
+        }
+
+        .class-slot,
+        .empty-slot {
+            min-height: 88px;
+            border-radius: 12px;
+            padding: 10px;
+        }
+
+        .class-slot {
+            position: relative;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s;
+            overflow: hidden;
+        }
+
         .class-slot:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 26px rgba(15, 23, 42, .14);
         }
-        
+
         .class-slot::before {
             content: '';
             position: absolute;
@@ -228,620 +275,457 @@
             top: 0;
             width: 4px;
             height: 100%;
+            border-radius: 12px 0 0 12px;
         }
-        
-        .class-slot.programming::before {
-            background: #6366F1;
-        }
-        
-        .class-slot.database::before {
-            background: #10B981;
-        }
-        
-        .class-slot.web::before {
-            background: #EC4899;
-        }
-        
-        .class-slot.mobile::before {
-            background: #F59E0B;
-        }
-        
-        .class-slot.ai::before {
-            background: #8B5CF6;
-        }
-        
+
+        .class-slot.programming::before { background: #4f46e5; }
+        .class-slot.database::before { background: #16a34a; }
+        .class-slot.web::before { background: #0ea5e9; }
+        .class-slot.mobile::before { background: #f59e0b; }
+        .class-slot.ai::before { background: #ef4444; }
+
         .class-name {
-            font-weight: 600;
-            color: var(--dark);
+            font-size: 13px;
+            font-weight: 700;
             margin-bottom: 8px;
-            font-size: 14px;
         }
-        
+
         .class-info {
             font-size: 12px;
-            color: var(--gray);
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
+            color: #64748b;
+            display: grid;
+            gap: 4px;
         }
-        
-        .class-info span {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
+
         .empty-slot {
-            background: transparent;
-            border: 2px dashed #E5E7EB;
+            border: 2px dashed #dbe3ef;
+            background: rgba(255,255,255,.5);
         }
-        
-        /* List View */
+
         .list-schedule {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
             display: none;
+            padding: 18px;
+            animation: reveal .45s ease both;
         }
-        
+
         .list-schedule.active {
             display: block;
         }
-        
-        .weekly-schedule.hidden {
-            display: none;
-        }
-        
-        .day-section {
-            margin-bottom: 30px;
-        }
-        
+
+        .day-section { margin-bottom: 20px; }
+
         .day-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 3px solid var(--primary);
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #334155;
+            border-bottom: 2px solid #dbeafe;
+            padding-bottom: 6px;
         }
-        
+
         .class-list-item {
+            padding: 14px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border-left: 4px solid #2e5ccd;
             display: flex;
             justify-content: space-between;
+            gap: 10px;
             align-items: center;
-            padding: 20px;
-            background: var(--light);
-            border-radius: 15px;
-            margin-bottom: 15px;
-            transition: all 0.3s;
-            border-left: 4px solid var(--primary);
-        }
-        
-        .class-list-item:hover {
-            transform: translateX(10px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        
-        .class-list-info {
-            flex: 1;
-        }
-        
-        .class-list-name {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--dark);
             margin-bottom: 8px;
         }
-        
+
+        .class-list-name {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
         .class-list-details {
             display: flex;
-            gap: 20px;
-            color: var(--gray);
-            font-size: 14px;
+            gap: 14px;
+            flex-wrap: wrap;
+            color: #64748b;
+            font-size: 13px;
         }
-        
+
         .class-list-time {
-            background: white;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-weight: 600;
-            color: var(--primary);
-        }
-        
-        /* Stats Cards */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-        
-        .stat-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-        
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-        
-        .stat-icon.primary {
-            background: linear-gradient(135deg, #6366F1, #8B5CF6);
-            color: white;
-        }
-        
-        .stat-icon.success {
-            background: linear-gradient(135deg, #10B981, #34D399);
-            color: white;
-        }
-        
-        .stat-icon.warning {
-            background: linear-gradient(135deg, #F59E0B, #FBBf24);
-            color: white;
-        }
-        
-        .stat-icon.danger {
-            background: linear-gradient(135deg, #EF4444, #F87171);
-            color: white;
-        }
-        
-        .stat-content {
-            flex: 1;
-        }
-        
-        .stat-value {
-            font-size: 28px;
+            white-space: nowrap;
+            font-size: 13px;
             font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 5px;
+            color: #1d4ed8;
+            background: #e0ecff;
+            padding: 9px 12px;
+            border-radius: 10px;
         }
-        
+
+        .stats-grid {
+            margin-top: 14px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: var(--c-surface);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 14px 32px rgba(3, 9, 28, .2);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            animation: reveal .45s ease both;
+        }
+
+        .stat-dot {
+            width: 12px;
+            height: 42px;
+            border-radius: 999px;
+        }
+
+        .dot-a { background: linear-gradient(180deg, #2563eb, #4f46e5); }
+        .dot-b { background: linear-gradient(180deg, #22c55e, #16a34a); }
+        .dot-c { background: linear-gradient(180deg, #f59e0b, #d97706); }
+        .dot-d { background: linear-gradient(180deg, #ef4444, #dc2626); }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 3px;
+        }
+
         .stat-label {
-            color: var(--gray);
-            font-size: 14px;
+            font-size: 12px;
+            color: #64748b;
         }
-        
-        /* Modal */
+
         .modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
+            inset: 0;
+            background: rgba(15, 23, 42, .45);
+            z-index: 10;
             align-items: center;
             justify-content: center;
+            padding: 16px;
         }
-        
+
         .modal.show {
             display: flex;
-            animation: fadeIn 0.3s;
         }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
+
         .modal-content {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            width: 90%;
-            max-width: 500px;
-            animation: slideUp 0.3s;
+            width: min(520px, 100%);
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 18px 36px rgba(0, 0, 0, .24);
         }
-        
-        @keyframes slideUp {
-            from { transform: translateY(50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
+
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
-        
+
         .modal-title {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
-            color: var(--dark);
         }
-        
+
         .modal-close {
-            width: 35px;
-            height: 35px;
             border: none;
-            background: var(--light);
-            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            border-radius: 999px;
+            background: #edf2ff;
+            color: #334155;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             font-size: 20px;
-            color: var(--gray);
-            transition: all 0.3s;
+            line-height: 1;
         }
-        
-        .modal-close:hover {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .modal-body {
-            color: var(--dark);
-        }
-        
+
         .detail-row {
             display: flex;
-            padding: 15px 0;
-            border-bottom: 1px solid var(--light);
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #edf2f7;
+            font-size: 14px;
         }
-        
+
         .detail-label {
             flex: 0 0 120px;
-            color: var(--gray);
-            font-weight: 500;
+            color: #64748b;
+            font-weight: 600;
         }
-        
-        .detail-value {
-            flex: 1;
-            color: var(--dark);
-        }
-        
-        @media (max-width: 768px) {
-            .weekly-schedule {
-                grid-template-columns: 60px 1fr;
-                padding: 15px;
-            }
-            
-            .day-header {
-                grid-column: 1 / -1;
-                margin-top: 10px;
-            }
-            
-            .stats-grid {
+
+        @media (max-width: 940px) {
+            .schedule-header {
                 grid-template-columns: 1fr;
             }
-            
-            .schedule-header {
+            .weekly-schedule {
+                grid-template-columns: 70px repeat(2, minmax(0, 1fr));
+            }
+            .day-header:nth-child(n+4) {
+                display: none;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .navbar {
                 flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .nav-links {
+                flex-wrap: wrap;
+            }
+            .weekly-schedule {
+                grid-template-columns: 1fr;
+            }
+            .time-slot {
+                border-right: none;
             }
         }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <h1>📅 Сабақ кестесі</h1>
-        <div class="nav-links">
-            <a href="/dashboard" class="nav-btn">← Dashboard</a>
-            <a href="/my-attendance" class="nav-btn">Менің қатысуым</a>
-            <a href="/profile" class="nav-btn">Профиль</a>
+<div class="bg-shape s1"></div>
+<div class="bg-shape s2"></div>
+<div class="bg-shape s3"></div>
+
+<nav class="navbar">
+    <h1>Сабақ кестесі</h1>
+    <div class="nav-links">
+        <a href="/dashboard" class="nav-btn">Басты бет</a>
+        <a href="/my-attendance" class="nav-btn">Қатысу</a>
+        <a href="/profile" class="nav-btn">Профиль</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="panel schedule-header">
+        <div class="header-title">
+            <h2>Апталық кесте</h2>
+            <p>Оқу күндерінің жоспары</p>
         </div>
-    </nav>
-    
-    <div class="container">
-        <div class="schedule-header">
-            <div class="header-title">
-                <h2>Апталық кесте</h2>
-                <p>2024 жыл, Қараша</p>
-            </div>
-            
-            <div class="week-selector">
-                <button class="week-btn" onclick="changeWeek(-1)">◀</button>
-                <div class="week-text" id="weekText">4 - 10 Қараша</div>
-                <button class="week-btn" onclick="changeWeek(1)">▶</button>
-            </div>
-            
-            <div class="view-toggle">
-                <button class="view-btn active" onclick="toggleView('weekly')">Апталық</button>
-                <button class="view-btn" onclick="toggleView('list')">Тізім</button>
-            </div>
+
+        <div class="week-selector">
+            <button class="week-btn" onclick="changeWeek(-1)">◀</button>
+            <div class="week-text" id="weekText">4 - 10 Қараша</div>
+            <button class="week-btn" onclick="changeWeek(1)">▶</button>
         </div>
-        
-        <!-- Weekly View -->
-        <div class="weekly-schedule" id="weeklyView">
-            <!-- Time header -->
-            <div></div>
-            <div class="day-header">
-                <div class="day-name">Дүйсенбі</div>
-                <div class="day-date">4 Қараша</div>
-            </div>
-            <div class="day-header">
-                <div class="day-name">Сейсенбі</div>
-                <div class="day-date">5 Қараша</div>
-            </div>
-            <div class="day-header">
-                <div class="day-name">Сәрсенбі</div>
-                <div class="day-date">6 Қараша</div>
-            </div>
-            <div class="day-header">
-                <div class="day-name">Бейсенбі</div>
-                <div class="day-date">7 Қараша</div>
-            </div>
-            <div class="day-header">
-                <div class="day-name">Жұма</div>
-                <div class="day-date">8 Қараша</div>
-            </div>
-            <div class="day-header" style="background: linear-gradient(135deg, #94A3B8, #CBD5E1);">
-                <div class="day-name">Сенбі</div>
-                <div class="day-date">9 Қараша</div>
-            </div>
-            
-            <!-- 9:00 - 10:30 -->
-            <div class="time-slot">9:00<br>10:30</div>
-            <div class="class-slot programming" onclick="showClassDetails('Программалау', '305', '9:00 - 10:30', 'Java программалау тілі')">
-                <div class="class-name">Программалау</div>
-                <div class="class-info">
-                    <span>🚪 305</span>
-                    <span>👥 ИС-2101</span>
-                </div>
-            </div>
-            <div class="empty-slot"></div>
-            <div class="empty-slot"></div>
-            <div class="class-slot mobile" onclick="showClassDetails('Мобильді қосымша', '310', '9:00 - 10:30', 'Android және iOS әзірлеу')">
-                <div class="class-name">Мобильді қосымша</div>
-                <div class="class-info">
-                    <span>🚪 310</span>
-                    <span>👥 ИС-2103</span>
-                </div>
-            </div>
-            <div class="empty-slot"></div>
-            <div class="empty-slot"></div>
-            
-            <!-- 11:00 - 12:30 -->
-            <div class="time-slot">11:00<br>12:30</div>
-            <div class="empty-slot"></div>
-            <div class="class-slot database" onclick="showClassDetails('Деректер қоры', '412', '11:00 - 12:30', 'SQL және NoSQL деректер қоры')">
-                <div class="class-name">Деректер қоры</div>
-                <div class="class-info">
-                    <span>🚪 412</span>
-                    <span>👥 ИС-2101</span>
-                </div>
-            </div>
-            <div class="empty-slot"></div>
-            <div class="empty-slot"></div>
-            <div class="empty-slot"></div>
-            <div class="empty-slot"></div>
-            
-            <!-- 13:00 - 14:30 -->
-            <div class="time-slot">13:00<br>14:30</div>
-            <div class="empty-slot"></div>
-            <div class="empty-slot"></div>
-            <div class="empty-slot"></div>
-            <div class="empty-slot"></div>
-            <div class="class-slot ai" onclick="showClassDetails('Жасанды интеллект', '501', '13:00 - 14:30', 'Machine Learning және AI негіздері')">
-                <div class="class-name">Жасанды интеллект</div>
-                <div class="class-info">
-                    <span>🚪 501</span>
-                    <span>👥 ИС-2101</span>
-                </div>
-            </div>
-            <div class="empty-slot"></div>
-            
-            <!-- 14:00 - 15:30 -->
-            <div class="time-slot">14:00<br>15:30</div>
-            <div class="empty-slot"></div>
-            <div class="empty-slot"></div>
-            <div class="class-slot web" onclick="showClassDetails('Веб әзірлеу', '208', '14:00 - 15:30', 'Frontend және Backend әзірлеу')">
-                <div class="class-name">Веб әзірлеу</div>
-                <div class="class-info">
-                    <span>🚪 208</span>
-                    <span>👥 ИС-2102</span>
-                </div>
-            </div>
-            <div class="empty-slot"></div>
-            <div class="empty-slot"></div>
-            <div class="empty-slot"></div>
+
+        <div class="view-toggle">
+            <button class="view-btn active" onclick="toggleView('weekly', event)">Апталық</button>
+            <button class="view-btn" onclick="toggleView('list', event)">Тізім</button>
         </div>
-        
-        <!-- List View -->
-        <div class="list-schedule" id="listView">
-            <div class="day-section">
-                <div class="day-title">Дүйсенбі, 4 Қараша</div>
-                <div class="class-list-item">
-                    <div class="class-list-info">
-                        <div class="class-list-name">Программалау</div>
-                        <div class="class-list-details">
-                            <span>🚪 Аудитория: 305</span>
-                            <span>👥 Топ: ИС-2101</span>
-                            <span>👨‍🏫 Оқытушы: Асқар Мұратов</span>
-                        </div>
+    </div>
+
+    <div class="panel weekly-schedule" id="weeklyView">
+        <div></div>
+        <div class="day-header"><div class="day-name">Дүйсенбі</div><div class="day-date">4 Қараша</div></div>
+        <div class="day-header"><div class="day-name">Сейсенбі</div><div class="day-date">5 Қараша</div></div>
+        <div class="day-header"><div class="day-name">Сәрсенбі</div><div class="day-date">6 Қараша</div></div>
+        <div class="day-header"><div class="day-name">Бейсенбі</div><div class="day-date">7 Қараша</div></div>
+        <div class="day-header"><div class="day-name">Жұма</div><div class="day-date">8 Қараша</div></div>
+        <div class="day-header" style="background:linear-gradient(100deg,#64748b,#94a3b8)"><div class="day-name">Сенбі</div><div class="day-date">9 Қараша</div></div>
+
+        <div class="time-slot">9:00<br>10:30</div>
+        <div class="class-slot programming" onclick="showClassDetails('Программалау', '305', '9:00 - 10:30', 'Java программалау тілі')">
+            <div class="class-name">Программалау</div>
+            <div class="class-info"><span>Аудитория: 305</span><span>Топ: ИС-2101</span></div>
+        </div>
+        <div class="empty-slot"></div>
+        <div class="empty-slot"></div>
+        <div class="class-slot mobile" onclick="showClassDetails('Мобильді қосымша', '310', '9:00 - 10:30', 'Android және iOS әзірлеу')">
+            <div class="class-name">Мобильді қосымша</div>
+            <div class="class-info"><span>Аудитория: 310</span><span>Топ: ИС-2103</span></div>
+        </div>
+        <div class="empty-slot"></div>
+        <div class="empty-slot"></div>
+
+        <div class="time-slot">11:00<br>12:30</div>
+        <div class="empty-slot"></div>
+        <div class="class-slot database" onclick="showClassDetails('Деректер қоры', '412', '11:00 - 12:30', 'SQL және NoSQL деректер қоры')">
+            <div class="class-name">Деректер қоры</div>
+            <div class="class-info"><span>Аудитория: 412</span><span>Топ: ИС-2101</span></div>
+        </div>
+        <div class="empty-slot"></div>
+        <div class="empty-slot"></div>
+        <div class="empty-slot"></div>
+        <div class="empty-slot"></div>
+
+        <div class="time-slot">13:00<br>14:30</div>
+        <div class="empty-slot"></div>
+        <div class="empty-slot"></div>
+        <div class="empty-slot"></div>
+        <div class="empty-slot"></div>
+        <div class="class-slot ai" onclick="showClassDetails('Жасанды интеллект', '501', '13:00 - 14:30', 'Machine Learning және AI негіздері')">
+            <div class="class-name">Жасанды интеллект</div>
+            <div class="class-info"><span>Аудитория: 501</span><span>Топ: ИС-2101</span></div>
+        </div>
+        <div class="empty-slot"></div>
+
+        <div class="time-slot">14:00<br>15:30</div>
+        <div class="empty-slot"></div>
+        <div class="empty-slot"></div>
+        <div class="class-slot web" onclick="showClassDetails('Веб әзірлеу', '208', '14:00 - 15:30', 'Frontend және Backend әзірлеу')">
+            <div class="class-name">Веб әзірлеу</div>
+            <div class="class-info"><span>Аудитория: 208</span><span>Топ: ИС-2102</span></div>
+        </div>
+        <div class="empty-slot"></div>
+        <div class="empty-slot"></div>
+        <div class="empty-slot"></div>
+    </div>
+
+    <div class="panel list-schedule" id="listView">
+        <div class="day-section">
+            <div class="day-title">Дүйсенбі</div>
+            <div class="class-list-item">
+                <div class="class-list-info">
+                    <div class="class-list-name">Программалау</div>
+                    <div class="class-list-details">
+                        <span>Аудитория: 305</span>
+                        <span>Топ: ИС-2101</span>
+                        <span>Оқытушы: Асқар Мұратов</span>
                     </div>
-                    <div class="class-list-time">9:00 - 10:30</div>
                 </div>
-            </div>
-            
-            <div class="day-section">
-                <div class="day-title">Сейсенбі, 5 Қараша</div>
-                <div class="class-list-item">
-                    <div class="class-list-info">
-                        <div class="class-list-name">Деректер қоры</div>
-                        <div class="class-list-details">
-                            <span>🚪 Аудитория: 412</span>
-                            <span>👥 Топ: ИС-2101</span>
-                            <span>👨‍🏫 Оқытушы: Айгүл Жұмабаева</span>
-                        </div>
-                    </div>
-                    <div class="class-list-time">11:00 - 12:30</div>
-                </div>
-            </div>
-            
-            <div class="day-section">
-                <div class="day-title">Сәрсенбі, 6 Қараша</div>
-                <div class="class-list-item">
-                    <div class="class-list-info">
-                        <div class="class-list-name">Веб әзірлеу</div>
-                        <div class="class-list-details">
-                            <span>🚪 Аудитория: 208</span>
-                            <span>👥 Топ: ИС-2102</span>
-                            <span>👨‍🏫 Оқытушы: Нұрлан Сәрсенов</span>
-                        </div>
-                    </div>
-                    <div class="class-list-time">14:00 - 15:30</div>
-                </div>
+                <div class="class-list-time">9:00 - 10:30</div>
             </div>
         </div>
-        
-        <!-- Statistics -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon primary">📚</div>
-                <div class="stat-content">
-                    <div class="stat-value">5</div>
-                    <div class="stat-label">Барлық сабақтар</div>
+
+        <div class="day-section">
+            <div class="day-title">Сейсенбі</div>
+            <div class="class-list-item">
+                <div class="class-list-info">
+                    <div class="class-list-name">Деректер қоры</div>
+                    <div class="class-list-details">
+                        <span>Аудитория: 412</span>
+                        <span>Топ: ИС-2101</span>
+                        <span>Оқытушы: Айгүл Жұмабаева</span>
+                    </div>
                 </div>
+                <div class="class-list-time">11:00 - 12:30</div>
             </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon success">✅</div>
-                <div class="stat-content">
-                    <div class="stat-value">18</div>
-                    <div class="stat-label">Апталық сағаттар</div>
+        </div>
+
+        <div class="day-section">
+            <div class="day-title">Сәрсенбі</div>
+            <div class="class-list-item">
+                <div class="class-list-info">
+                    <div class="class-list-name">Веб әзірлеу</div>
+                    <div class="class-list-details">
+                        <span>Аудитория: 208</span>
+                        <span>Топ: ИС-2102</span>
+                        <span>Оқытушы: Нұрлан Сәрсенов</span>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon warning">📍</div>
-                <div class="stat-content">
-                    <div class="stat-value">4</div>
-                    <div class="stat-label">Әртүрлі аудиториялар</div>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon danger">📊</div>
-                <div class="stat-content">
-                    <div class="stat-value">16</div>
-                    <div class="stat-label">Кредиттер</div>
-                </div>
+                <div class="class-list-time">14:00 - 15:30</div>
             </div>
         </div>
     </div>
-    
-    <!-- Class Details Modal -->
-    <div id="classModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title" id="modalTitle">Сабақ туралы</div>
-                <button class="modal-close" onclick="closeModal()">×</button>
-            </div>
-            <div class="modal-body" id="modalBody">
-                <!-- Content will be inserted here -->
-            </div>
-        </div>
+
+    <div class="stats-grid">
+        <div class="stat-card"><div class="stat-dot dot-a"></div><div><div class="stat-value">5</div><div class="stat-label">Барлық сабақтар</div></div></div>
+        <div class="stat-card"><div class="stat-dot dot-b"></div><div><div class="stat-value">18</div><div class="stat-label">Апталық сағаттар</div></div></div>
+        <div class="stat-card"><div class="stat-dot dot-c"></div><div><div class="stat-value">4</div><div class="stat-label">Аудитория</div></div></div>
+        <div class="stat-card"><div class="stat-dot dot-d"></div><div><div class="stat-value">16</div><div class="stat-label">Кредиттер</div></div></div>
     </div>
-    
-    <script>
-        let currentWeekOffset = 0;
-        
-        function changeWeek(direction) {
-            currentWeekOffset += direction;
-            updateWeekDisplay();
-        }
-        
-        function updateWeekDisplay() {
-            const currentDate = new Date();
-            currentDate.setDate(currentDate.getDate() + (currentWeekOffset * 7));
-            
-            const monday = new Date(currentDate);
-            monday.setDate(monday.getDate() - monday.getDay() + 1);
-            
-            const sunday = new Date(monday);
-            sunday.setDate(sunday.getDate() + 6);
-            
-            const monthNames = ['Қаңтар', 'Ақпан', 'Наурыз', 'Сәуір', 'Мамыр', 'Маусым',
-                              'Шілде', 'Тамыз', 'Қыркүйек', 'Қазан', 'Қараша', 'Желтоқсан'];
-            
-            const weekText = `${monday.getDate()} - ${sunday.getDate()} ${monthNames[monday.getMonth()]}`;
-            document.getElementById('weekText').textContent = weekText;
-            
-            const dayHeaders = document.querySelectorAll('.day-date');
-            const currentDay = new Date(monday);
-            dayHeaders.forEach(header => {
-                header.textContent = `${currentDay.getDate()} ${monthNames[currentDay.getMonth()].substring(0, 3)}`;
-                currentDay.setDate(currentDay.getDate() + 1);
-            });
-        }
-        
-        function toggleView(view) {
-            const weeklyView = document.getElementById('weeklyView');
-            const listView = document.getElementById('listView');
-            const viewBtns = document.querySelectorAll('.view-btn');
-            
-            viewBtns.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            if (view === 'weekly') {
-                weeklyView.classList.remove('hidden');
-                listView.classList.remove('active');
-            } else {
-                weeklyView.classList.add('hidden');
-                listView.classList.add('active');
-            }
-        }
-        
-        function showClassDetails(name, room, time, description) {
-            const modal = document.getElementById('classModal');
-            const modalTitle = document.getElementById('modalTitle');
-            const modalBody = document.getElementById('modalBody');
-            
-            modalTitle.textContent = name;
-            modalBody.innerHTML = `
-                <div class="detail-row">
-                    <div class="detail-label">⏰ Уақыты:</div>
-                    <div class="detail-value">${time}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">🚪 Аудитория:</div>
-                    <div class="detail-value">${room}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">👨‍🏫 Оқытушы:</div>
-                    <div class="detail-value">Асқар Мұратов</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">📚 Сипаттама:</div>
-                    <div class="detail-value">${description}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">💳 Кредиттер:</div>
-                    <div class="detail-value">3</div>
-                </div>
-            `;
-            
-            modal.classList.add('show');
-        }
-        
-        function closeModal() {
-            const modal = document.getElementById('classModal');
-            modal.classList.remove('show');
-        }
-        
-        window.onclick = function(event) {
-            const modal = document.getElementById('classModal');
-            if (event.target == modal) {
-                closeModal();
-            }
-        }
-        
+</div>
+
+<div id="classModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitle">Сабақ туралы</div>
+            <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
+<script>
+    let currentWeekOffset = 0;
+
+    function changeWeek(direction) {
+        currentWeekOffset += direction;
         updateWeekDisplay();
-    </script>
+    }
+
+    function updateWeekDisplay() {
+        const currentDate = new Date();
+        currentDate.setDate(currentDate.getDate() + (currentWeekOffset * 7));
+
+        const monday = new Date(currentDate);
+        monday.setDate(monday.getDate() - monday.getDay() + 1);
+
+        const sunday = new Date(monday);
+        sunday.setDate(sunday.getDate() + 6);
+
+        const monthNames = ['Қаңтар', 'Ақпан', 'Наурыз', 'Сәуір', 'Мамыр', 'Маусым',
+            'Шілде', 'Тамыз', 'Қыркүйек', 'Қазан', 'Қараша', 'Желтоқсан'];
+
+        const weekText = `${monday.getDate()} - ${sunday.getDate()} ${monthNames[monday.getMonth()]}`;
+        document.getElementById('weekText').textContent = weekText;
+
+        const dayHeaders = document.querySelectorAll('.day-date');
+        const currentDay = new Date(monday);
+        dayHeaders.forEach(header => {
+            header.textContent = `${currentDay.getDate()} ${monthNames[currentDay.getMonth()].substring(0, 3)}`;
+            currentDay.setDate(currentDay.getDate() + 1);
+        });
+    }
+
+    function toggleView(view, event) {
+        const weeklyView = document.getElementById('weeklyView');
+        const listView = document.getElementById('listView');
+        const viewBtns = document.querySelectorAll('.view-btn');
+
+        viewBtns.forEach(btn => btn.classList.remove('active'));
+        if (event && event.target) {
+            event.target.classList.add('active');
+        }
+
+        if (view === 'weekly') {
+            weeklyView.classList.remove('hidden');
+            listView.classList.remove('active');
+        } else {
+            weeklyView.classList.add('hidden');
+            listView.classList.add('active');
+        }
+    }
+
+    function showClassDetails(name, room, time, description) {
+        const modal = document.getElementById('classModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+
+        modalTitle.textContent = name;
+        modalBody.innerHTML = `
+            <div class="detail-row"><div class="detail-label">Уақыты:</div><div>${time}</div></div>
+            <div class="detail-row"><div class="detail-label">Аудитория:</div><div>${room}</div></div>
+            <div class="detail-row"><div class="detail-label">Оқытушы:</div><div>Асқар Мұратов</div></div>
+            <div class="detail-row"><div class="detail-label">Сипаттама:</div><div>${description}</div></div>
+            <div class="detail-row"><div class="detail-label">Кредит:</div><div>3</div></div>
+        `;
+
+        modal.classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('classModal').classList.remove('show');
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('classModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    };
+
+    updateWeekDisplay();
+</script>
+<script src="/js/app-prefs.js"></script>
 </body>
 </html>

@@ -2,622 +2,556 @@
 <html lang="kk" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Менің профилім - Attendance System</title>
+    <title>Менің профилім</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         :root {
-            --primary: #4A90E2;
-            --primary-dark: #357ABD;
-            --secondary: #5CB85C;
-            --danger: #D9534F;
-            --warning: #F0AD4E;
-            --light: #F8F9FA;
-            --dark: #2C3E50;
-            --gray: #95A5A6;
-            --bg: #F5F7FA;
+            --c-primary: #2e5ccd;
+            --c-primary-2: #4f46e5;
+            --c-teal: #0ea5e9;
+            --c-bg-1: #0b1530;
+            --c-bg-2: #132b66;
+            --c-surface: rgba(255,255,255,.92);
+            --c-text: #1f2937;
+            --c-muted: #64748b;
+            --c-danger: #dc2626;
+            --c-header-bg: linear-gradient(120deg, rgba(15,23,42,.86), rgba(30,58,138,.72));
+            --c-header-text: #f8fafc;
+            --c-nav-text: #e5e7eb;
         }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        html[data-theme="dark"] {
+            --c-surface: rgba(17,24,39,.92);
+            --c-text: #e5e7eb;
+            --c-muted: #94a3b8;
+            --c-header-bg: linear-gradient(120deg, rgba(2,6,23,.9), rgba(30,41,59,.85));
+            --c-header-text: #f8fafc;
+            --c-nav-text: #e5e7eb;
         }
-        
+        html[data-theme="light"] {
+            --c-surface: rgba(255,255,255,.92);
+            --c-text: #1f2937;
+            --c-muted: #64748b;
+            --c-header-bg: linear-gradient(120deg, rgba(30,58,138,.82), rgba(14,165,233,.62));
+            --c-header-text: #f8fafc;
+            --c-nav-text: #f1f5f9;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: var(--bg);
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             min-height: 100vh;
+            color: var(--c-text);
+            background: linear-gradient(130deg, var(--c-bg-1), var(--c-bg-2));
+            overflow-x: hidden;
         }
-        
+        .bg-shape {
+            position: fixed;
+            border-radius: 999px;
+            filter: blur(10px);
+            opacity: .35;
+            pointer-events: none;
+            animation: drift 9s ease-in-out infinite;
+            z-index: 0;
+        }
+        .bg-shape.s1 { width: 280px; height: 280px; top: 36px; right: 6%; background: radial-gradient(circle at 30% 30%, #22d3ee, #2563eb); }
+        .bg-shape.s2 { width: 340px; height: 340px; bottom: -110px; left: -50px; background: radial-gradient(circle at 30% 30%, #c084fc, #6366f1); animation-delay: 1.6s; }
+        @keyframes drift {
+            0% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-14px) scale(1.04); }
+            100% { transform: translateY(0px) scale(1); }
+        }
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px 40px;
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 18px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            color: var(--c-header-text);
+            background: var(--c-header-bg);
+            border: 1px solid rgba(255,255,255,.18);
+            border-radius: 14px;
+            backdrop-filter: blur(6px);
         }
-        
-        .header h1 {
-            font-size: 24px;
-            font-weight: 600;
-        }
-        
-        .nav-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        
+        .header h1 { font-size: 24px; color: var(--c-header-text); }
+        .nav-buttons { display: flex; gap: 10px; }
         .nav-btn {
-            padding: 8px 20px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s;
             text-decoration: none;
-            font-size: 14px;
+            color: var(--c-nav-text);
+            border: 1px solid rgba(255,255,255,.2);
+            background: rgba(255,255,255,.08);
+            border-radius: 10px;
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: transform .2s, background .2s;
         }
-        
-        .nav-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-        
+        .nav-btn:hover { transform: translateY(-1px); background: rgba(255,255,255,.15); }
+
         .container {
+            position: relative;
+            z-index: 1;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 0 20px 24px;
         }
-        
+        .alert {
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 14px;
+            display: none;
+            font-size: 14px;
+        }
+        .alert.show { display: block; }
+        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
         .profile-header {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            background: var(--c-surface);
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 14px;
+            box-shadow: 0 20px 40px rgba(3,9,28,.24);
             display: flex;
             align-items: center;
-            gap: 30px;
+            gap: 18px;
+            flex-wrap: wrap;
         }
-        
+        .avatar-col { display: flex; flex-direction: column; gap: 10px; align-items: center; }
         .profile-image {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 96px;
+            height: 96px;
+            border-radius: 999px;
+            background: linear-gradient(110deg, var(--c-primary), var(--c-teal));
+            color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 48px;
-            color: white;
+            font-size: 30px;
+            font-weight: 700;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,.8);
+        }
+        .profile-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .avatar-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .mini-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            background: #eef2ff;
+            color: #1e3a8a;
             font-weight: 600;
         }
-        
-        .profile-info h2 {
-            color: var(--dark);
-            margin-bottom: 8px;
-            font-size: 28px;
-        }
-        
-        .profile-info .email {
-            color: var(--gray);
-            margin-bottom: 10px;
-        }
-        
+        .mini-btn.danger { background: #fee2e2; color: var(--c-danger); }
+        .profile-info h2 { font-size: 28px; margin-bottom: 4px; color: var(--c-text); }
+        .profile-info .email { color: var(--c-muted); margin-bottom: 8px; }
         .role-badge {
             display: inline-block;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .03em;
         }
-        
-        .role-badge.STUDENT {
-            background: #E3F2FD;
-            color: #1976D2;
-        }
-        
-        .role-badge.TEACHER {
-            background: #F3E5F5;
-            color: #7B1FA2;
-        }
-        
-        .role-badge.ADMIN {
-            background: #FFEBEE;
-            color: #C62828;
-        }
-        
+        .role-badge.STUDENT { background: #dbeafe; color: #1d4ed8; }
+        .role-badge.TEACHER { background: #ede9fe; color: #6d28d9; }
+        .role-badge.ADMIN { background: #fee2e2; color: #b91c1c; }
+
         .content-grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
-            gap: 30px;
+            gap: 14px;
         }
-        
         .card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            background: var(--c-surface);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 16px 34px rgba(3,9,28,.2);
         }
-        
         .card h3 {
-            color: var(--dark);
-            margin-bottom: 20px;
             font-size: 18px;
+            margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        
         .edit-btn {
-            padding: 5px 15px;
-            background: var(--primary);
-            color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 9px;
+            padding: 7px 12px;
+            background: linear-gradient(90deg, var(--c-primary), var(--c-primary-2));
+            color: #fff;
             cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
+            font-size: 12px;
+            font-weight: 600;
         }
-        
-        .edit-btn:hover {
-            background: var(--primary-dark);
-        }
-        
         .info-row {
             display: flex;
-            padding: 12px 0;
-            border-bottom: 1px solid #f0f0f0;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #e6edf8;
         }
-        
-        .info-row:last-child {
-            border-bottom: none;
-        }
-        
-        .info-label {
-            flex: 0 0 150px;
-            color: var(--gray);
-            font-size: 14px;
-        }
-        
-        .info-value {
-            flex: 1;
-            color: var(--dark);
-            font-size: 15px;
-        }
-        
-        .empty-value {
-            color: #ccc;
-            font-style: italic;
-        }
-        
+        .info-row:last-child { border-bottom: none; }
+        .info-label { flex: 0 0 160px; color: var(--c-muted); font-size: 13px; font-weight: 600; }
+        .info-value { flex: 1; font-size: 14px; }
+        .empty-value { color: #94a3b8; font-style: italic; }
+
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 15px;
+            gap: 10px;
+            margin-top: 10px;
         }
-        
         .stat-box {
-            padding: 15px;
-            background: var(--bg);
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
             border-radius: 10px;
+            padding: 12px;
             text-align: center;
         }
-        
-        .stat-value {
-            font-size: 24px;
-            font-weight: 600;
-            color: var(--primary);
-            margin-bottom: 5px;
+        .stat-value { font-size: 22px; font-weight: 700; color: #1d4ed8; margin-bottom: 2px; }
+        .stat-label { font-size: 12px; color: var(--c-muted); }
+        html[data-theme="dark"] .profile-header,
+        html[data-theme="dark"] .card,
+        html[data-theme="dark"] .modal-content {
+            background: var(--c-surface) !important;
+            border: 1px solid #263244;
         }
-        
-        .stat-label {
-            font-size: 12px;
-            color: var(--gray);
-            text-transform: uppercase;
+        html[data-theme="dark"] .info-row { border-bottom-color: #334155; }
+        html[data-theme="dark"] .stat-box {
+            background: #0f172a;
+            border-color: #334155;
         }
-        
-        /* Edit Modal */
+        html[data-theme="dark"] .stat-value { color: #60a5fa; }
+
         .modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
+            inset: 0;
+            background: rgba(15,23,42,.45);
             z-index: 1000;
             align-items: center;
             justify-content: center;
+            padding: 16px;
         }
-        
-        .modal.show {
-            display: flex;
-            animation: fadeIn 0.3s;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
+        .modal.show { display: flex; }
         .modal-content {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            width: 90%;
-            max-width: 500px;
+            width: min(560px, 100%);
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 24px 45px rgba(0,0,0,.24);
             max-height: 90vh;
             overflow-y: auto;
-            animation: slideUp 0.3s;
         }
-        
-        @keyframes slideUp {
-            from { transform: translateY(50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .modal-header h3 {
-            color: var(--dark);
-            font-size: 20px;
-        }
-        
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .modal-header h3 { font-size: 20px; }
         .close-btn {
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             border: none;
-            background: var(--light);
-            border-radius: 50%;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #334155;
             cursor: pointer;
-            font-size: 18px;
-            color: var(--gray);
+            font-size: 20px;
+            line-height: 1;
         }
-        
-        .close-btn:hover {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--dark);
-            font-weight: 500;
-            font-size: 14px;
-        }
-        
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 13px; color: #334155; font-weight: 600; }
         .form-group input {
             width: 100%;
-            padding: 10px 15px;
-            border: 2px solid #e0e0e0;
+            border: 1px solid #dbe4f0;
             border-radius: 10px;
-            font-size: 15px;
-            transition: all 0.3s;
-        }
-        
-        .form-group input:focus {
+            padding: 10px 12px;
+            font-size: 14px;
             outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
         }
-        
-        .form-row {
-            display: flex;
-            gap: 15px;
+        .form-group input:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79,70,229,.12);
         }
-        
-        .form-row .form-group {
-            flex: 1;
-        }
-        
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 25px;
-        }
-        
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-group { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
         .btn {
-            padding: 10px 25px;
             border: none;
             border-radius: 10px;
-            font-size: 15px;
-            font-weight: 500;
+            padding: 10px 14px;
+            font-size: 14px;
             cursor: pointer;
-            transition: all 0.3s;
+            font-weight: 600;
         }
-        
-        .btn-cancel {
-            background: var(--light);
-            color: var(--dark);
-        }
-        
-        .btn-cancel:hover {
-            background: #e0e0e0;
-        }
-        
-        .btn-save {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .btn-save:hover {
-            background: var(--primary-dark);
-        }
-        
-        .alert {
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        
-        .alert.show {
-            display: block;
-            animation: slideDown 0.3s;
-        }
-        
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .alert-success {
-            background: #D4EDDA;
-            color: #155724;
-            border: 1px solid #C3E6CB;
-        }
-        
-        .alert-error {
-            background: #F8D7DA;
-            color: #721C24;
-            border: 1px solid #F5C6CB;
-        }
-        
-        @media (max-width: 768px) {
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .profile-header {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
+        .btn-cancel { background: #eef2ff; color: #334155; }
+        .btn-save { background: linear-gradient(90deg, var(--c-primary), var(--c-primary-2)); color: #fff; }
+
+        @media (max-width: 860px) {
+            .content-grid { grid-template-columns: 1fr; }
+            .profile-header { flex-direction: column; text-align: center; }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🎓 Attendance System</h1>
-        <div class="nav-buttons">
-            <a href="/dashboard" class="nav-btn">Dashboard</a>
-            <a href="/profile" class="nav-btn">Профиль</a>
-            <button class="nav-btn" onclick="logout()">Шығу</button>
+<div class="bg-shape s1"></div>
+<div class="bg-shape s2"></div>
+
+<div class="header">
+    <h1>Attendance System</h1>
+    <div class="nav-buttons">
+        <a href="/dashboard" class="nav-btn">Басты бет</a>
+        <a href="/profile" class="nav-btn">Профиль</a>
+        <button class="nav-btn" onclick="logout()">Шығу</button>
+    </div>
+</div>
+
+<div class="container">
+    <div id="alert" class="alert"></div>
+
+    <div class="profile-header">
+        <div class="avatar-col">
+            <div class="profile-image" id="avatarBox">
+                <img id="avatarImage" th:if="${user.profileImage != null && !user.profileImage.isEmpty()}" th:src="${user.profileImage}" alt="Avatar">
+                <span id="avatarFallback" th:if="${user.profileImage == null || user.profileImage.isEmpty()}"
+                      th:text="${#strings.substring(user.firstName, 0, 1) + #strings.substring(user.lastName, 0, 1)}">AB</span>
+            </div>
+            <div class="avatar-actions">
+                <input type="file" id="avatarInput" accept="image/*" hidden>
+                <button class="mini-btn" onclick="pickAvatar()">Аватар жүктеу</button>
+                <button class="mini-btn danger" onclick="deleteAvatar()">Өшіру</button>
+            </div>
+        </div>
+        <div class="profile-info">
+            <h2 th:text="${user.firstName + ' ' + user.lastName}">Аты Тегі</h2>
+            <p class="email" th:text="${user.email}">email@example.com</p>
+            <span class="role-badge" th:classappend="${user.role}"
+                  th:text="${user.role == 'STUDENT' ? 'Студент' : (user.role == 'TEACHER' ? 'Оқытушы' : 'Админ')}">ROLE</span>
         </div>
     </div>
-    
-    <div class="container">
-        <div id="alert" class="alert"></div>
-        
-        <div class="profile-header">
-            <div class="profile-image" th:text="${#strings.substring(user.firstName, 0, 1) + #strings.substring(user.lastName, 0, 1)}">
-                AB
+
+    <div class="content-grid">
+        <div class="card">
+            <h3>
+                Жеке мәліметтер
+                <button class="edit-btn" onclick="openEditModal()">Өзгерту</button>
+            </h3>
+            <div class="info-row"><span class="info-label">Аты:</span><span class="info-value" th:text="${user.firstName}">Аты</span></div>
+            <div class="info-row"><span class="info-label">Тегі:</span><span class="info-value" th:text="${user.lastName}">Тегі</span></div>
+            <div class="info-row"><span class="info-label">Email:</span><span class="info-value" th:text="${user.email}">email@example.com</span></div>
+            <div class="info-row">
+                <span class="info-label">Телефон:</span>
+                <span class="info-value" th:text="${user.phone != null && !user.phone.isEmpty() ? user.phone : 'Көрсетілмеген'}"
+                      th:classappend="${user.phone == null || user.phone.isEmpty() ? 'empty-value' : ''}">Көрсетілмеген</span>
             </div>
-            <div class="profile-info">
-                <h2 th:text="${user.firstName + ' ' + user.lastName}">Аты Тегі</h2>
-                <p class="email" th:text="${user.email}">email@example.com</p>
-                <span class="role-badge" th:classappend="${user.role}" th:text="${user.role}">ROLE</span>
+            <div class="info-row">
+                <span class="info-label">Кафедра/Бөлім:</span>
+                <span class="info-value" th:text="${user.department != null && !user.department.isEmpty() ? user.department : 'Көрсетілмеген'}"
+                      th:classappend="${user.department == null || user.department.isEmpty() ? 'empty-value' : ''}">Көрсетілмеген</span>
+            </div>
+            <div class="info-row" th:if="${user.role == 'STUDENT'}">
+                <span class="info-label">Топ:</span>
+                <span class="info-value" th:text="${user.group != null && !user.group.isEmpty() ? user.group : 'Көрсетілмеген'}"
+                      th:classappend="${user.group == null || user.group.isEmpty() ? 'empty-value' : ''}">Көрсетілмеген</span>
             </div>
         </div>
-        
-        <div class="content-grid">
+
+        <div>
             <div class="card">
-                <h3>
-                    Жеке мәліметтер
-                    <button class="edit-btn" onclick="openEditModal()">✏️ Өзгерту</button>
-                </h3>
+                <h3>Аккаунт мәліметтері</h3>
+                <div class="info-row"><span class="info-label">Рөлі:</span><span class="info-value"
+                    th:text="${user.role == 'STUDENT' ? 'Студент' : (user.role == 'TEACHER' ? 'Оқытушы' : 'Админ')}">ROLE</span></div>
                 <div class="info-row">
-                    <span class="info-label">Аты:</span>
-                    <span class="info-value" th:text="${user.firstName}">Аты</span>
+                    <span class="info-label">Тіркелген күні:</span>
+                    <span class="info-value" th:text="${user.registrationDate != null ? #temporals.format(user.registrationDate, 'dd.MM.yyyy HH:mm') : 'Белгісіз'}">01.01.2024</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Тегі:</span>
-                    <span class="info-value" th:text="${user.lastName}">Тегі</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Email:</span>
-                    <span class="info-value" th:text="${user.email}">email@example.com</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Телефон:</span>
-                    <span class="info-value" th:text="${user.phone != null && !user.phone.isEmpty() ? user.phone : 'Көрсетілмеген'}" 
-                          th:classappend="${user.phone == null || user.phone.isEmpty() ? 'empty-value' : ''}">
-                        Көрсетілмеген
-                    </span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Кафедра/Бөлім:</span>
-                    <span class="info-value" th:text="${user.department != null && !user.department.isEmpty() ? user.department : 'Көрсетілмеген'}"
-                          th:classappend="${user.department == null || user.department.isEmpty() ? 'empty-value' : ''}">
-                        Көрсетілмеген
-                    </span>
-                </div>
-                <div class="info-row" th:if="${user.role == 'STUDENT'}">
-                    <span class="info-label">Топ:</span>
-                    <span class="info-value" th:text="${user.group != null && !user.group.isEmpty() ? user.group : 'Көрсетілмеген'}"
-                          th:classappend="${user.group == null || user.group.isEmpty() ? 'empty-value' : ''}">
-                        Көрсетілмеген
-                    </span>
+                    <span class="info-label">Соңғы кіру:</span>
+                    <span class="info-value" th:text="${user.lastLoginDate != null ? #temporals.format(user.lastLoginDate, 'dd.MM.yyyy HH:mm') : 'Белгісіз'}">01.01.2024</span>
                 </div>
             </div>
-            
-            <div>
-                <div class="card">
-                    <h3>Аккаунт мәліметтері</h3>
-                    <div class="info-row">
-                        <span class="info-label">Рөлі:</span>
-                        <span class="info-value" th:text="${user.role}">ROLE</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Тіркелген күні:</span>
-                        <span class="info-value" th:text="${user.registrationDate != null ? #temporals.format(user.registrationDate, 'dd.MM.yyyy HH:mm') : 'Белгісіз'}">
-                            01.01.2024
-                        </span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Соңғы кіру:</span>
-                        <span class="info-value" th:text="${user.lastLoginDate != null ? #temporals.format(user.lastLoginDate, 'dd.MM.yyyy HH:mm') : 'Белгісіз'}">
-                            01.01.2024
-                        </span>
-                    </div>
-                </div>
-                
-                <div class="card" style="margin-top: 20px;">
-                    <h3>Статистика</h3>
-                    <div class="stats-grid">
-                        <div class="stat-box">
-                            <div class="stat-value">0</div>
-                            <div class="stat-label">Сабақтар</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-value">0%</div>
-                            <div class="stat-label">Қатысу</div>
-                        </div>
-                    </div>
+
+            <div class="card" style="margin-top: 12px;">
+                <h3>Статистика</h3>
+                <div class="stats-grid">
+                    <div class="stat-box"><div class="stat-value">0</div><div class="stat-label">Сабақтар</div></div>
+                    <div class="stat-box"><div class="stat-value">0%</div><div class="stat-label">Қатысу</div></div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Edit Modal -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Профильді өзгерту</h3>
-                <button class="close-btn" onclick="closeEditModal()">×</button>
-            </div>
-            <form id="editForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="edit-firstName">Аты</label>
-                        <input type="text" id="edit-firstName" th:value="${user.firstName}" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-lastName">Тегі</label>
-                        <input type="text" id="edit-lastName" th:value="${user.lastName}" required>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="edit-phone">Телефон номері</label>
-                    <input type="tel" id="edit-phone" th:value="${user.phone}" placeholder="+7 (777) 123-45-67">
-                </div>
-                
-                <div class="form-group">
-                    <label for="edit-department">Кафедра/Бөлім</label>
-                    <input type="text" id="edit-department" th:value="${user.department}" placeholder="Мысалы: Ақпараттық жүйелер">
-                </div>
-                
-                <div class="form-group" th:if="${user.role == 'STUDENT'}">
-                    <label for="edit-group">Топ</label>
-                    <input type="text" id="edit-group" th:value="${user.group}" placeholder="Мысалы: ИС-2101">
-                </div>
-                
-                <div class="btn-group">
-                    <button type="button" class="btn btn-cancel" onclick="closeEditModal()">Бас тарту</button>
-                    <button type="submit" class="btn btn-save">Сақтау</button>
-                </div>
-            </form>
+</div>
+
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Профильді өзгерту</h3>
+            <button class="close-btn" onclick="closeEditModal()">×</button>
         </div>
+        <form id="editForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="edit-firstName">Аты</label>
+                    <input type="text" id="edit-firstName" th:value="${user.firstName}" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-lastName">Тегі</label>
+                    <input type="text" id="edit-lastName" th:value="${user.lastName}" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="edit-phone">Телефон номері</label>
+                <input type="tel" id="edit-phone" th:value="${user.phone}" placeholder="+7 (777) 123-45-67">
+            </div>
+
+            <div class="form-group">
+                <label for="edit-department">Кафедра/Бөлім</label>
+                <input type="text" id="edit-department" th:value="${user.department}" placeholder="Мысалы: Ақпараттық жүйелер">
+            </div>
+
+            <div class="form-group" th:if="${user.role == 'STUDENT'}">
+                <label for="edit-group">Топ</label>
+                <input type="text" id="edit-group" th:value="${user.group}" placeholder="Мысалы: ИС-2101">
+            </div>
+
+            <div class="btn-group">
+                <button type="button" class="btn btn-cancel" onclick="closeEditModal()">Бас тарту</button>
+                <button type="submit" class="btn btn-save">Сақтау</button>
+            </div>
+        </form>
     </div>
-    
-    <script th:inline="javascript">
-        const userId = /*[[${user.id}]]*/ '';
-        
-        function showAlert(message, type) {
-            const alert = document.getElementById('alert');
-            alert.className = 'alert show alert-' + type;
-            alert.textContent = message;
-            setTimeout(() => {
-                alert.className = 'alert';
-            }, 5000);
-        }
-        
-        function openEditModal() {
-            document.getElementById('editModal').classList.add('show');
-        }
-        
-        function closeEditModal() {
-            document.getElementById('editModal').classList.remove('show');
-        }
-        
-        document.getElementById('editModal').addEventListener('click', (e) => {
-            if (e.target === e.currentTarget) {
+</div>
+
+<script th:inline="javascript">
+    function showAlert(message, type) {
+        const alert = document.getElementById('alert');
+        alert.className = 'alert show alert-' + type;
+        alert.textContent = message;
+        setTimeout(() => { alert.className = 'alert'; }, 4000);
+    }
+
+    function openEditModal() {
+        document.getElementById('editModal').classList.add('show');
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').classList.remove('show');
+    }
+
+    document.getElementById('editModal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeEditModal();
+    });
+
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = {
+            firstName: document.getElementById('edit-firstName').value,
+            lastName: document.getElementById('edit-lastName').value,
+            phone: document.getElementById('edit-phone').value,
+            department: document.getElementById('edit-department').value,
+            group: document.getElementById('edit-group')?.value || ''
+        };
+
+        try {
+            const response = await fetch('/api/profile/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                showAlert('Профиль сәтті жаңартылды', 'success');
                 closeEditModal();
+                setTimeout(() => window.location.reload(), 1200);
+            } else {
+                showAlert(data.error || 'Жаңарту кезінде қате', 'error');
             }
-        });
-        
-        document.getElementById('editForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = {
-                firstName: document.getElementById('edit-firstName').value,
-                lastName: document.getElementById('edit-lastName').value,
-                phone: document.getElementById('edit-phone').value,
-                department: document.getElementById('edit-department').value,
-                group: document.getElementById('edit-group')?.value || ''
-            };
-            
-            try {
-                const response = await fetch('/api/profile/update', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showAlert('Профиль сәтті жаңартылды!', 'success');
-                    closeEditModal();
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                } else {
-                    showAlert(data.error || 'Жаңарту кезінде қате пайда болды', 'error');
-                }
-            } catch (error) {
-                showAlert('Серверге қосыла алмадық', 'error');
-            }
-        });
-        
-        function logout() {
-            fetch('/api/auth/logout', { method: 'POST' })
-                .then(() => {
-                    window.location.href = '/login';
-                })
-                .catch(() => {
-                    window.location.href = '/login';
-                });
+        } catch (error) {
+            showAlert('Серверге қосыла алмадық', 'error');
         }
-    </script>
+    });
+
+    function pickAvatar() {
+        document.getElementById('avatarInput').click();
+    }
+
+    document.getElementById('avatarInput').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/api/profile/avatar', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok || !data.success) {
+                showAlert(data.error || 'Аватарды жүктеу мүмкін болмады (файл тым үлкен болуы мүмкін)', 'error');
+                return;
+            }
+
+            renderAvatar(data.profileImage);
+            showAlert('Аватар сәтті сақталды', 'success');
+        } catch (error) {
+            showAlert('Аватарды жүктеу кезінде қате', 'error');
+        } finally {
+            e.target.value = '';
+        }
+    });
+
+    async function deleteAvatar() {
+        try {
+            const response = await fetch('/api/profile/avatar', { method: 'DELETE' });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.success) {
+                showAlert(data.error || 'Аватарды өшіру мүмкін болмады', 'error');
+                return;
+            }
+
+            renderAvatar('');
+            showAlert('Аватар өшірілді', 'success');
+        } catch (error) {
+            showAlert('Аватарды өшіру кезінде қате', 'error');
+        }
+    }
+
+    function renderAvatar(profileImage) {
+        const box = document.getElementById('avatarBox');
+        const initialFirst = document.getElementById('edit-firstName').value?.[0] || '';
+        const initialLast = document.getElementById('edit-lastName').value?.[0] || '';
+
+        if (profileImage) {
+            box.innerHTML = `<img id="avatarImage" alt="Avatar">`;
+            document.getElementById('avatarImage').src = profileImage;
+        } else {
+            box.innerHTML = `<span id="avatarFallback"></span>`;
+            document.getElementById('avatarFallback').textContent = (initialFirst + initialLast).toUpperCase() || 'U';
+        }
+    }
+
+    function logout() {
+        fetch('/api/auth/logout', { method: 'POST' })
+            .then(() => { window.location.href = '/login'; })
+            .catch(() => { window.location.href = '/login'; });
+    }
+</script>
+<script src="/js/app-prefs.js"></script>
 </body>
 </html>

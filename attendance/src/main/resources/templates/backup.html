@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Резервтік көшірме</title>
+    <style>
+        :root { --bg-1:#102447; --bg-2:#1f3f7a; --panel:rgba(255,255,255,.92); --text:#0f172a; --muted:#64748b; --brand:#2257c7; --brand-2:#3b82f6; }
+        *{box-sizing:border-box;} body{margin:0;min-height:100vh;font-family:"Inter","Segoe UI",sans-serif;background:linear-gradient(135deg,var(--bg-1),var(--bg-2));color:var(--text);} 
+        .topbar{max-width:980px;margin:0 auto;padding:20px;display:flex;justify-content:space-between;color:#f8fafc}.link-btn{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.14);color:#fff;text-decoration:none;padding:9px 14px;border-radius:10px;font-weight:600}
+        .page{max-width:980px;margin:0 auto;padding:0 20px 26px}.panel{background:var(--panel);border-radius:18px;box-shadow:0 14px 34px rgba(2,6,23,.2);padding:18px}
+        h1{margin:0 0 8px}.muted{color:var(--muted);margin-bottom:12px}
+        .btn{border:none;border-radius:10px;padding:10px 14px;background:linear-gradient(90deg,var(--brand),var(--brand-2));color:#fff;font-weight:700;cursor:pointer}
+        pre{margin-top:12px;background:#f8fafc;border:1px solid #dbe4f0;border-radius:10px;padding:10px;white-space:pre-wrap;min-height:120px}
+    </style>
+</head>
+<body>
+<header class="topbar"><div style="font-size:24px;font-weight:800;">Резервтік көшірме</div><a href="/dashboard" class="link-btn">Басты бет</a></header>
+<main class="page">
+    <section class="panel">
+        <h1>Backup</h1>
+        <p class="muted">Қолмен резерв жасау үшін батырманы басыңыз.</p>
+        <button class="btn" onclick="createBackup()">Backup жасау</button>
+        <pre id="result"></pre>
+    </section>
+</main>
+<script>
+    async function createBackup() {
+        const data = await fetch('/api/admin/backup', { method: 'POST' }).then(r => r.json());
+        document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+    }
+</script>
+<script src="/js/app-prefs.js"></script>
+</body>
+</html>

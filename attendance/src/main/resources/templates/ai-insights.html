@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI аналитика</title>
+    <style>
+        :root {
+            --bg1:#102447; --bg2:#1f3f7a;
+            --panel:rgba(255,255,255,.92); --text:#0f172a; --muted:#64748b; --line:#dbe4f0;
+            --brand:#2257c7; --brand2:#3b82f6; --ok:#16a34a; --warn:#f59e0b; --danger:#dc2626;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin:0; min-height:100vh; color:var(--text);
+            font-family:"Inter", "Segoe UI", sans-serif;
+            background:radial-gradient(circle at 12% -20%, #4f46e5 0%, transparent 46%),
+                       radial-gradient(circle at 90% 120%, #0ea5a4 0%, transparent 40%),
+                       linear-gradient(135deg, var(--bg1), var(--bg2));
+        }
+        .topbar { max-width:1240px; margin:0 auto; padding:18px 20px; display:flex; justify-content:space-between; align-items:center; color:#fff; gap:10px; flex-wrap:wrap; }
+        .title { font-size:28px; font-weight:800; }
+        .actions { display:flex; gap:10px; flex-wrap:wrap; }
+        .btn-link { border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.14); color:#fff; text-decoration:none; padding:8px 12px; border-radius:10px; font-weight:600; }
+
+        .page { max-width:1240px; margin:0 auto; padding:0 20px 26px; }
+        .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:14px; }
+        .card { background:var(--panel); border:1px solid rgba(255,255,255,.3); border-radius:16px; padding:16px; box-shadow:0 12px 28px rgba(0,0,0,.14); }
+        .card h3 { margin:0 0 8px; }
+        .card p { margin:0 0 10px; color:var(--muted); font-size:14px; }
+        .row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+        .btn { border:none; border-radius:10px; padding:9px 12px; cursor:pointer; color:#fff; background:linear-gradient(90deg,var(--brand),var(--brand2)); font-weight:700; }
+        .btn.secondary { background:#e2e8f0; color:#1e293b; }
+        .select, .input, .textarea {
+            width:100%; border:1px solid var(--line); background:#fff; border-radius:10px; padding:9px 10px; font-size:14px;
+        }
+        .textarea { min-height:90px; resize:vertical; }
+        .list { display:grid; gap:8px; max-height:320px; overflow:auto; }
+        .item { border:1px solid var(--line); border-radius:10px; padding:9px; background:#fff; }
+        .pill { display:inline-block; border-radius:999px; padding:2px 8px; font-size:11px; font-weight:700; }
+        .pill.high { background:#fee2e2; color:#991b1b; }
+        .pill.medium { background:#fef3c7; color:#92400e; }
+        .pill.low { background:#dcfce7; color:#166534; }
+        .kpi { font-weight:800; font-size:20px; }
+        .summary { white-space:pre-wrap; line-height:1.5; }
+    </style>
+</head>
+<body>
+<header class="topbar">
+    <div class="title">AI аналитика</div>
+    <div class="actions">
+        <a class="btn-link" href="/dashboard">Басты бет</a>
+        <a class="btn-link" href="/system-reports" th:if="${role == 'ADMIN'}">Жүйе есептері</a>
+        <a class="btn-link" href="/attendance-report" th:if="${role == 'TEACHER'}">Қатысу есебі</a>
+    </div>
+</header>
+
+<main class="page">
+    <div class="grid">
+        <section class="card">
+            <h3>1) Smart Alerts</h3>
+            <p>Кім қатты кешігіп жатыр немесе келмегенін көрсетеді.</p>
+            <button class="btn" onclick="loadAlerts()">Жаңарту</button>
+            <div class="list" id="alertsList" style="margin-top:10px;"></div>
+        </section>
+
+        <section class="card">
+            <h3>2) Risk Prediction</h3>
+            <p>Студенттің тәуекел балын және деңгейін есептейді.</p>
+            <button class="btn" onclick="loadRisk()">Жаңарту</button>
+            <div class="list" id="riskList" style="margin-top:10px;"></div>
+        </section>
+
+        <section class="card">
+            <h3>3) Reason Clusters</h3>
+            <p>Қатысу проблемасының топтарын шығарады.</p>
+            <button class="btn" onclick="loadClusters()">Жаңарту</button>
+            <div class="list" id="clusterList" style="margin-top:10px;"></div>
+        </section>
+
+        <section class="card">
+            <h3>4) Апталық қорытынды</h3>
+            <p>Апталық AI-сводка, өзгеріс және тәуекелдер.</p>
+            <button class="btn" onclick="loadSummary()">Жаңарту</button>
+            <div class="summary" id="summaryText" style="margin-top:10px;"></div>
+        </section>
+
+        <section class="card">
+            <h3>5) Оқытушы хабарламасы</h3>
+            <p>Студентке дайын хабарлама (RU/KZ, стиль).</p>
+            <div class="row">
+                <select id="msgLang" class="select" style="max-width:120px;">
+                    <option value="kz">KZ</option>
+                    <option value="ru">RU</option>
+                </select>
+                <select id="msgTone" class="select" style="max-width:180px;">
+                    <option value="supportive">қолдаушы</option>
+                    <option value="neutral">бейтарап</option>
+                    <option value="strict">қатаң</option>
+                </select>
+            </div>
+            <button class="btn" onclick="generateDraft()">Жасау</button>
+            <textarea id="draftOutput" class="textarea" style="margin-top:10px;"></textarea>
+        </section>
+
+        <section class="card">
+            <h3>6) AI Chat</h3>
+            <p>Сұрақ қой: "Кто чаще опаздывает?", "Кто не пришел?", "QR аномалии".</p>
+            <input id="chatInput" class="input" placeholder="Сұрағыңызды жазыңыз...">
+            <div class="row" style="margin-top:8px;">
+                <button class="btn" onclick="askChat()">Сұрау</button>
+            </div>
+            <div class="summary" id="chatAnswer"></div>
+            <div class="list" id="chatItems" style="margin-top:8px;"></div>
+        </section>
+
+        <section class="card">
+            <h3>7) QR аномалиялар</h3>
+            <p>QR сессиядағы күмәнді паттерндерді табады.</p>
+            <button class="btn" onclick="loadAnomalies()">Жаңарту</button>
+            <div class="list" id="anomalyList" style="margin-top:10px;"></div>
+        </section>
+    </div>
+</main>
+
+<script>
+    function pill(level) {
+        const lv = (level || '').toLowerCase();
+        const cls = lv === 'high' ? 'high' : lv === 'medium' ? 'medium' : 'low';
+        return `<span class="pill ${cls}">${level || 'LOW'}</span>`;
+    }
+
+    function safe(v) { return v === null || v === undefined ? '' : String(v); }
+
+    async function loadAlerts() {
+        const data = await fetch('/api/ai/smart-alerts').then(r => r.json());
+        const list = document.getElementById('alertsList');
+        const items = data.items || [];
+        if (!items.length) { list.innerHTML = '<div class="item">Ескерту жоқ</div>'; return; }
+        list.innerHTML = items.slice(0, 12).map(a => `<div class="item">${pill(a.severity)} <strong>${safe(a.studentName)}</strong> - ${safe(a.className)}<br><small>${safe(a.reason)}</small></div>`).join('');
+    }
+
+    async function loadRisk() {
+        const data = await fetch('/api/ai/risk-predictions').then(r => r.json());
+        const list = document.getElementById('riskList');
+        const items = data.items || [];
+        if (!items.length) { list.innerHTML = '<div class="item">Дерек жоқ</div>'; return; }
+        list.innerHTML = items.slice(0, 15).map(i => `<div class="item">${pill(i.riskLevel)} <strong>${safe(i.studentName)}</strong> (${safe(i.group)})<br><span class="kpi">${safe(i.riskScore)}</span> score, attendance ${safe(i.attendanceRate)}%</div>`).join('');
+    }
+
+    async function loadClusters() {
+        const data = await fetch('/api/ai/clusters').then(r => r.json());
+        const list = document.getElementById('clusterList');
+        const items = data.items || [];
+        if (!items.length) { list.innerHTML = '<div class="item">Топтар табылмады</div>'; return; }
+        list.innerHTML = items.map(i => `<div class="item"><strong>${safe(i.clusterType)}</strong>: ${safe(i.label)} (${safe(i.sharePercent)}%)<br><small>${safe(i.insight)}</small></div>`).join('');
+    }
+
+    async function loadSummary() {
+        const data = await fetch('/api/ai/admin-summary').then(r => r.json());
+        document.getElementById('summaryText').textContent = safe(data.summary || 'Қорытынды әлі жоқ');
+    }
+
+    async function generateDraft() {
+        const lang = document.getElementById('msgLang').value;
+        const tone = document.getElementById('msgTone').value;
+        const data = await fetch('/api/ai/message-draft', {
+            method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ lang, tone })
+        }).then(r => r.json());
+        document.getElementById('draftOutput').value = safe(data.message);
+    }
+
+    async function askChat() {
+        const query = document.getElementById('chatInput').value.trim();
+        if (!query) return;
+        const data = await fetch('/api/ai/chat', {
+            method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ query })
+        }).then(r => r.json());
+        document.getElementById('chatAnswer').textContent = safe(data.answer);
+        const list = document.getElementById('chatItems');
+        const items = data.items || [];
+        list.innerHTML = items.length ? items.map(i => `<div class="item">${JSON.stringify(i)}</div>`).join('') : '<div class="item">Элементтер жоқ</div>';
+    }
+
+    async function loadAnomalies() {
+        const data = await fetch('/api/ai/qr-anomalies').then(r => r.json());
+        const list = document.getElementById('anomalyList');
+        const items = data.items || [];
+        if (!items.length) { list.innerHTML = '<div class="item">Аномалия жоқ</div>'; return; }
+        list.innerHTML = items.map(i => `<div class="item">${pill(i.severityLevel)} <strong>${safe(i.className)}</strong><br>score: ${safe(i.severityScore)}, check-ins: ${safe(i.checkIns)}<br><small>${(i.reasons || []).join('; ')}</small></div>`).join('');
+    }
+
+    async function init() {
+        await Promise.all([loadAlerts(), loadRisk(), loadClusters(), loadSummary(), loadAnomalies()]);
+    }
+
+    init();
+</script>
+<script src="/js/app-prefs.js"></script>
+</body>
+</html>

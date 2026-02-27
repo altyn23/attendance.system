@@ -82,28 +82,54 @@ public class TeacherController {
             result.put("error", "Unauthorized");
             return result;
         }
+
+        if (!"TEACHER".equals(role) && !"ADMIN".equals(role)) {
+            result.put("error", "Unauthorized");
+            return result;
+        }
         
-        List<Class> teacherClasses = classRepository.findByTeacherId(userId);
-        
-        Set<String> groups = teacherClasses.stream()
-            .map(Class::getGroup)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toSet());
-        
-        List<User> allStudents = userRepository.findAll().stream()
-            .filter(u -> "STUDENT".equals(u.getRole()))
-            .filter(u -> u.getGroup() != null && groups.contains(u.getGroup()))
-            .collect(Collectors.toList());
-        
-        Map<String, List<User>> studentsByGroup = allStudents.stream()
-            .collect(Collectors.groupingBy(
-                u -> u.getGroup() != null ? u.getGroup() : "Без группы"
-            ));
-        
-        result.put("students", allStudents);
+        Set<String> groups = getTeacherGroups(userId, role);
+
+        List<User> registeredStudents = userRepository.findAll().stream()
+                .filter(u -> "STUDENT".equals(u.getRole()))
+                .filter(u -> u.getRegistrationDate() != null)
+                .toList();
+
+        List<User> visibleStudents;
+        if ("ADMIN".equals(role)) {
+            visibleStudents = registeredStudents;
+        } else if (groups.isEmpty()) {
+            visibleStudents = List.of();
+        } else {
+            visibleStudents = registeredStudents.stream()
+                    .filter(u -> u.getGroup() != null && groups.contains(u.getGroup()))
+                    .toList();
+        }
+
+        Map<String, List<User>> studentsByGroup = visibleStudents.stream()
+                .filter(u -> u.getGroup() != null && !u.getGroup().isBlank())
+                .sorted(Comparator.comparing(User::getGroup).thenComparing(User::getLastName, Comparator.nullsLast(String::compareToIgnoreCase)))
+                .collect(Collectors.groupingBy(
+                        User::getGroup,
+                        LinkedHashMap::new,
+                        Collectors.toList()
+                ));
+
+        List<User> unassignedStudents = registeredStudents.stream()
+                .filter(u -> u.getGroup() == null || u.getGroup().isBlank())
+                .sorted(Comparator.comparing(User::getRegistrationDate, Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
+
+        List<String> sortedGroups = new ArrayList<>(studentsByGroup.keySet());
+        sortedGroups.sort(String::compareToIgnoreCase);
+
+        result.put("students", visibleStudents);
         result.put("studentsByGroup", studentsByGroup);
-        result.put("groups", groups);
-        result.put("totalStudents", allStudents.size());
+        result.put("groups", sortedGroups);
+        result.put("totalStudents", visibleStudents.size());
+        result.put("unassignedStudents", "ADMIN".equals(role) ? unassignedStudents : List.of());
+        result.put("unassignedCount", "ADMIN".equals(role) ? unassignedStudents.size() : 0);
+        result.put("scopedByTeacherGroups", !"ADMIN".equals(role));
         
         return result;
     }
@@ -114,7 +140,7 @@ public class TeacherController {
         Map<String, Object> result = new HashMap<>();
         
         String role = (String) session.getAttribute("role");
-        if (!"TEACHER".equals(role) && !"ADMIN".equals(role)) {
+        if (!"ADMIN".equals(role)) {
             result.put("error", "Unauthorized");
             return result;
         }
@@ -124,7 +150,13 @@ public class TeacherController {
         String lastName = req.get("lastName");
         String group = req.get("group");
         String password = req.get("password");
-        
+
+        if (email == null || email.isBlank() || firstName == null || firstName.isBlank()
+                || lastName == null || lastName.isBlank() || group == null || group.isBlank()) {
+            result.put("error", "Міндетті өрістерді толтырыңыз");
+            return result;
+        }
+
         if (userRepository.findByEmail(email).isPresent()) {
             result.put("error", "Бұл email тіркелген");
             return result;
@@ -160,6 +192,14 @@ public class TeacherController {
         if (!"TEACHER".equals(role) && !"ADMIN".equals(role)) {
             stats.put("error", "Unauthorized");
             return stats;
+        }
+
+        if (!"ADMIN".equals(role)) {
+            Set<String> teacherGroups = getTeacherGroups(userId, role);
+            if (!teacherGroups.contains(group)) {
+                stats.put("error", "Бұл топ бойынша мәліметке қолжетім жоқ");
+                return stats;
+            }
         }
         
         List<User> students = userRepository.findAll().stream()
@@ -205,7 +245,7 @@ public class TeacherController {
         Map<String, Object> result = new HashMap<>();
         
         String role = (String) session.getAttribute("role");
-        if (!"TEACHER".equals(role) && !"ADMIN".equals(role)) {
+        if (!"ADMIN".equals(role)) {
             result.put("error", "Unauthorized");
             return result;
         }
@@ -220,18 +260,19 @@ public class TeacherController {
         for (Map<String, String> studentData : students) {
             try {
                 String email = studentData.get("email");
+                String group = studentData.get("group");
                 
                 if (userRepository.findByEmail(email).isPresent()) {
                     failed++;
                     errors.add("Email " + email + " уже существует");
                     continue;
                 }
-                
+
                 User student = new User();
                 student.setEmail(email);
                 student.setFirstName(studentData.get("firstName"));
                 student.setLastName(studentData.get("lastName"));
-                student.setGroup(studentData.get("group"));
+                student.setGroup(group);
                 student.setRole("STUDENT");
                 student.setPasswordHash(encoder.encode(
                     studentData.getOrDefault("password", "student123")
@@ -264,6 +305,7 @@ public class TeacherController {
             HttpSession session) {
         Map<String, Object> result = new HashMap<>();
         
+        String userId = (String) session.getAttribute("userId");
         String role = (String) session.getAttribute("role");
         if (!"TEACHER".equals(role) && !"ADMIN".equals(role)) {
             result.put("error", "Unauthorized");
@@ -271,6 +313,18 @@ public class TeacherController {
         }
         
         String newGroup = req.get("group");
+        if (newGroup == null || newGroup.isBlank()) {
+            result.put("error", "Топ атауы бос болмауы керек");
+            return result;
+        }
+
+        if (!"ADMIN".equals(role)) {
+            Set<String> teacherGroups = getTeacherGroups(userId, role);
+            if (!teacherGroups.contains(newGroup)) {
+                result.put("error", "Сіз тек өз сабақтарыңыздағы топтарға ғана ауыстыра аласыз");
+                return result;
+            }
+        }
         
         Optional<User> studentOpt = userRepository.findById(studentId);
         if (studentOpt.isEmpty()) {
@@ -337,5 +391,21 @@ public class TeacherController {
         stats.put("rate", Math.round(rate));
         
         return stats;
+    }
+
+    private Set<String> getTeacherGroups(String userId, String role) {
+        if ("ADMIN".equals(role)) {
+            return classRepository.findAll().stream()
+                    .map(Class::getGroup)
+                    .filter(Objects::nonNull)
+                    .filter(g -> !g.isBlank())
+                    .collect(Collectors.toCollection(TreeSet::new));
+        }
+
+        return classRepository.findByTeacherId(userId).stream()
+                .map(Class::getGroup)
+                .filter(Objects::nonNull)
+                .filter(g -> !g.isBlank())
+                .collect(Collectors.toCollection(TreeSet::new));
     }
 }

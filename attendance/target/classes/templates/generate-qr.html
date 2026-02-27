@@ -2,656 +2,401 @@
 <html lang="kk" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>QR Generator - Attendance System</title>
+    <title>QR Сессиялар</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <style>
         :root {
-            --primary: #8B5CF6;
-            --primary-dark: #7C3AED;
-            --secondary: #EC4899;
-            --success: #10B981;
-            --danger: #EF4444;
-            --warning: #F59E0B;
-            --dark: #1F2937;
-            --gray: #6B7280;
-            --light: #F9FAFB;
-            --white: #FFFFFF;
+            --bg-1: #102447;
+            --bg-2: #1f3f7a;
+            --panel: rgba(255, 255, 255, 0.92);
+            --text: #0f172a;
+            --muted: #64748b;
+            --line: #dbe4f0;
+            --brand: #2257c7;
+            --brand-2: #3b82f6;
+            --accent: #0ea5a4;
+            --danger: #dc2626;
         }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
             min-height: 100vh;
+            font-family: "Inter", "Manrope", "Segoe UI", sans-serif;
+            background: radial-gradient(circle at 10% -20%, #4f46e5 0%, transparent 45%),
+                        radial-gradient(circle at 90% 120%, #0ea5a4 0%, transparent 40%),
+                        linear-gradient(135deg, var(--bg-1), var(--bg-2));
+            color: var(--text);
         }
-        
-        .navbar {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        .orb { position: fixed; border-radius: 999px; filter: blur(10px); opacity: .28; pointer-events: none; animation: float 9s ease-in-out infinite; }
+        .orb.one { width: 320px; height: 320px; background: #38bdf8; top: 40px; right: 6%; }
+        .orb.two { width: 280px; height: 280px; background: #22c55e; bottom: 0; left: -70px; animation-delay: 1.2s; }
+        @keyframes float { 0% { transform: translateY(0) scale(1); } 50% { transform: translateY(-14px) scale(1.03); } 100% { transform: translateY(0) scale(1); } }
+
+        .topbar { max-width: 1240px; margin: 0 auto; padding: 20px; display: flex; justify-content: space-between; align-items: center; color: #f8fafc; gap: 12px; }
+        .title { font-size: 26px; font-weight: 800; }
+        .top-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .link-btn { border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.14); color: #fff; text-decoration: none; padding: 9px 14px; border-radius: 10px; font-weight: 600; }
+
+        .page { max-width: 1240px; margin: 0 auto; padding: 0 20px 26px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .panel { background: var(--panel); border-radius: 18px; box-shadow: 0 14px 34px rgba(2, 6, 23, 0.2); border: 1px solid rgba(255,255,255,.35); padding: 18px; }
+        .panel h2 { margin: 0 0 8px; font-size: 24px; }
+        .panel p { margin: 0 0 12px; color: var(--muted); }
+
+        .field { margin-bottom: 12px; }
+        .field label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: #334155; }
+        .field input, .field select {
+            width: 100%; border: 1px solid #cfd9e5; border-radius: 10px; padding: 10px 11px; font-size: 14px; outline: none;
         }
-        
-        .navbar h1 {
-            color: white;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn { border: none; border-radius: 10px; padding: 10px 14px; color: #fff; font-weight: 700; cursor: pointer; }
+        .btn-primary { background: linear-gradient(90deg, var(--brand), var(--brand-2)); }
+        .btn-danger { background: #fff1f2; color: var(--danger); border: 1px solid #fecaca; }
+
+        .qr-box {
+            min-height: 360px; border: 1px dashed #c7d6eb; border-radius: 14px; background: #f8fafc;
+            display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; padding: 18px;
         }
-        
-        .nav-links {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .nav-btn {
-            padding: 8px 20px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 10px;
-            text-decoration: none;
-            transition: all 0.3s;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        .nav-btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-2px);
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-        
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 25px;
-            padding: 35px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-        }
-        
-        .card-header {
-            margin-bottom: 30px;
-        }
-        
-        .card-header h2 {
-            color: var(--dark);
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-        
-        .card-header p {
-            color: var(--gray);
-            font-size: 15px;
-        }
-        
-        .form-group {
-            margin-bottom: 25px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--dark);
-            font-weight: 500;
-            font-size: 14px;
-        }
-        
-        select, input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #E5E7EB;
-            border-radius: 12px;
-            font-size: 15px;
-            transition: all 0.3s;
-        }
-        
-        select:focus, input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-        }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        
-        .generate-btn {
-            width: 100%;
-            padding: 15px 30px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 10px;
-        }
-        
-        .generate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px rgba(139, 92, 246, 0.3);
-        }
-        
-        .generate-btn:disabled {
-            background: var(--gray);
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .qr-display {
-            background: var(--light);
-            border-radius: 20px;
-            padding: 30px;
-            text-align: center;
-            min-height: 400px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .qr-display.active {
-            background: white;
-            border: 2px solid var(--primary);
-        }
-        
-        #qrcode {
-            margin: 20px auto;
-        }
-        
-        #qrcode canvas {
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        
-        .qr-code-text {
-            margin-top: 20px;
-            padding: 15px;
-            background: var(--light);
-            border-radius: 12px;
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: 4px;
-            color: var(--primary);
-            font-family: 'Courier New', monospace;
-        }
-        
-        .qr-info {
-            margin-top: 20px;
-            padding: 20px;
-            background: linear-gradient(135deg, #F3E7FC, #E9D5FF);
-            border-radius: 15px;
-        }
-        
-        .qr-info-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(139, 92, 246, 0.1);
-        }
-        
-        .qr-info-item:last-child {
-            border-bottom: none;
-        }
-        
-        .qr-info-label {
-            color: var(--gray);
-            font-size: 14px;
-        }
-        
-        .qr-info-value {
-            color: var(--dark);
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .timer {
-            margin-top: 20px;
-            padding: 15px;
-            background: #FEF3C7;
-            border-radius: 12px;
-            color: #92400E;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        
-        .timer-icon {
-            font-size: 24px;
-            animation: pulse 1s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-        
-        .active-sessions {
-            margin-top: 30px;
-        }
-        
-        .active-sessions h3 {
-            color: var(--dark);
-            margin-bottom: 20px;
-            font-size: 20px;
-        }
-        
+        .qr-text { font-family: "JetBrains Mono", monospace; font-size: 24px; letter-spacing: 2px; font-weight: 800; color: #1e3a8a; }
+        #qrcode canvas { border-radius: 10px; background: #fff; padding: 8px; border: 1px solid #dbe4f0; }
+        .timer { margin-top: 10px; font-weight: 700; color: #92400e; background: #ffedd5; border-radius: 10px; padding: 8px 12px; }
+
+        .session-list { margin-top: 8px; display: grid; gap: 8px; }
         .session-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background: white;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            border: 2px solid var(--light);
-            transition: all 0.3s;
+            border: 1px solid var(--line); background: #fff; border-radius: 12px; padding: 12px;
+            display: flex; justify-content: space-between; gap: 10px; align-items: center;
         }
-        
-        .session-item:hover {
-            border-color: var(--primary);
-            transform: translateX(5px);
-        }
-        
-        .session-info {
-            flex: 1;
-        }
-        
-        .session-class {
-            font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 5px;
-        }
-        
-        .session-details {
-            font-size: 14px;
-            color: var(--gray);
-        }
-        
-        .session-stats {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .session-count {
-            background: var(--light);
-            padding: 8px 15px;
+        .session-title { font-weight: 700; margin-bottom: 4px; }
+        .session-meta { color: var(--muted); font-size: 13px; }
+        .session-right { display: flex; align-items: center; gap: 8px; }
+        .pill { background: #e0e7ff; color: #1e3a8a; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700; }
+
+        .alert-item {
+            border: 1px solid #e2e8f0;
             border-radius: 10px;
-            font-weight: 600;
-            color: var(--primary);
+            padding: 10px;
+            background: #f8fafc;
+            font-size: 13px;
         }
-        
-        .session-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .action-btn {
-            padding: 8px 15px;
-            background: white;
-            border: 2px solid var(--primary);
-            color: var(--primary);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        .action-btn:hover {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .action-btn.danger {
-            border-color: var(--danger);
-            color: var(--danger);
-        }
-        
-        .action-btn.danger:hover {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .placeholder {
-            text-align: center;
-            color: var(--gray);
-            padding: 60px 20px;
-        }
-        
-        .placeholder-icon {
-            font-size: 80px;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-        
-        .placeholder-text {
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-        
-        .placeholder-hint {
-            font-size: 14px;
-            opacity: 0.8;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-top: 30px;
-        }
-        
-        .stat-card {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-        
-        .stat-label {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-        
-        @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+        .alert-item.high { border-color: #fecaca; background: #fff1f2; }
+        .alert-item.medium { border-color: #fde68a; background: #fffbeb; }
+
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+        @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <h1>🔲 QR Generator</h1>
-        <div class="nav-links">
-            <a href="/dashboard" class="nav-btn">← Dashboard</a>
-            <a href="/attendance-report" class="nav-btn">Есептер</a>
-            <a href="/profile" class="nav-btn">Профиль</a>
-        </div>
-    </nav>
-    
-    <div class="container">
-        <div class="grid">
-            <div class="card">
-                <div class="card-header">
-                    <h2>QR код жасау</h2>
-                    <p>Студенттердің қатысуын тіркеу үшін QR код генерациялаңыз</p>
-                </div>
-                
-                <form id="generateForm">
-                    <div class="form-group">
-                        <label for="classSelect">Сабақты таңдаңыз</label>
-                        <select id="classSelect" required>
-                            <option value="">Таңдаңыз...</option>
-                            <option th:each="class : ${classes}" 
-                                    th:value="${class.id}" 
-                                    th:text="${class.name + ' - ' + class.group}">
-                                Сабақ
-                            </option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="room">Аудитория</label>
-                            <input type="text" id="room" placeholder="Мысалы: 305" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="duration">Ұзақтығы (минут)</label>
-                            <input type="number" id="duration" value="15" min="5" max="60" required>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="generate-btn">
-                        ✨ QR код жасау
-                    </button>
-                </form>
-                
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value">0</div>
-                        <div class="stat-label">Бүгін</div>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #10B981, #34D399);">
-                        <div class="stat-value">0</div>
-                        <div class="stat-label">Апта</div>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #F59E0B, #FBBf24);">
-                        <div class="stat-value">0</div>
-                        <div class="stat-label">Барлығы</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    <h2>QR код дисплейі</h2>
-                    <p>Студенттерге көрсету үшін</p>
-                </div>
-                
-                <div class="qr-display" id="qrDisplay">
-                    <div class="placeholder">
-                        <div class="placeholder-icon">🔲</div>
-                        <div class="placeholder-text">QR код әзірге жоқ</div>
-                        <div class="placeholder-hint">Жасау үшін сол жақтағы форманы толтырыңыз</div>
-                    </div>
-                </div>
-                
-                <div class="active-sessions">
-                    <h3>Белсенді сессиялар</h3>
-                    <div id="activeSessions">
-                        <p style="text-align: center; color: var(--gray); padding: 20px;">
-                            Белсенді сессиялар жоқ
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="orb one"></div>
+<div class="orb two"></div>
+
+<header class="topbar">
+    <div class="title">QR Сессиялар</div>
+    <div class="top-actions">
+        <a href="/dashboard" class="link-btn">Басты бет</a>
+        <a href="/attendance-report" class="link-btn">Қатысу есебі</a>
+        <a href="/my-classes" class="link-btn">Сабақтар</a>
+        <a href="/notifications" class="link-btn">Хабарландырулар</a>
+        <button class="link-btn" onclick="enablePush()" style="cursor:pointer;">Push қосу</button>
     </div>
-    
-    <script>
-        let currentTimer = null;
-        
-        document.getElementById('generateForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const classId = document.getElementById('classSelect').value;
-            const room = document.getElementById('room').value;
-            const duration = document.getElementById('duration').value;
-            
-            try {
-                const response = await fetch('/api/qr/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ classId, room, duration })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    displayQRCode(data);
-                    loadActiveSessions();
-                } else {
-                    alert(data.error || 'QR код жасау кезінде қате');
-                }
-            } catch (error) {
-                alert('Серверге қосылу қатесі: ' + error.message);
-            }
-        });
-        
-        function displayQRCode(data) {
-            const qrDisplay = document.getElementById('qrDisplay');
-            qrDisplay.classList.add('active');
-            
-            const className = document.getElementById('classSelect').selectedOptions[0].text;
-            const room = document.getElementById('room').value;
-            
-            qrDisplay.innerHTML = `
-                <div>
-                    <h3 style="color: var(--dark); margin-bottom: 20px;">QR код дайын!</h3>
-                    <div id="qrcode"></div>
-                    <div class="qr-code-text">${data.qrCode}</div>
-                    <div class="qr-info">
-                        <div class="qr-info-item">
-                            <span class="qr-info-label">Сабақ:</span>
-                            <span class="qr-info-value">${className}</span>
-                        </div>
-                        <div class="qr-info-item">
-                            <span class="qr-info-label">Аудитория:</span>
-                            <span class="qr-info-value">${room}</span>
-                        </div>
-                        <div class="qr-info-item">
-                            <span class="qr-info-label">Код:</span>
-                            <span class="qr-info-value">${data.qrCode}</span>
-                        </div>
+</header>
+
+<main class="page">
+    <div class="grid">
+        <section class="panel">
+            <h2>Жаңа QR жасау</h2>
+            <p>Сабақты таңдап, QR сессияны бастаңыз.</p>
+            <form id="generateForm">
+                <div class="field">
+                    <label for="classSelect">Сабақ</label>
+                    <select id="classSelect" required>
+                        <option value="">Таңдаңыз</option>
+                        <option th:each="class : ${classes}"
+                                th:value="${class.id}"
+                                th:data-room="${class.room}"
+                                th:data-day="${class.dayOfWeek}"
+                                th:data-start="${class.startTime}"
+                                th:data-end="${class.endTime}"
+                                th:text="${class.name + ' - ' + class.group + ' (' + class.dayOfWeek + ' ' + class.startTime + ')'}">Сабақ</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="classSchedule">Кесте</label>
+                    <input id="classSchedule" type="text" readonly placeholder="Сабақты таңдаңыз">
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label for="room">Аудитория</label>
+                        <input id="room" type="text" readonly required>
                     </div>
-                    <div class="timer" id="timer">
-                        <span class="timer-icon">⏰</span>
-                        <span id="timerText">15:00</span>
-                        <span>қалды</span>
+                    <div class="field">
+                        <label for="duration">Ұзақтығы</label>
+                        <select id="durationUnit" onchange="onDurationUnitChange()" style="margin-bottom:6px;">
+                            <option value="seconds">Секунд</option>
+                            <option value="minutes">Минут</option>
+                        </select>
+                        <input id="duration" type="number" min="1" max="3600" value="15" required>
                     </div>
                 </div>
-            `;
-            
-            QRCode.toCanvas(document.createElement('canvas'), data.qrCode, {
-                width: 250,
-                margin: 2,
-                color: {
-                    dark: '#1F2937',
-                    light: '#FFFFFF'
-                }
-            }, function (error, canvas) {
-                if (error) console.error(error);
-                document.getElementById('qrcode').appendChild(canvas);
+                <button class="btn btn-primary" type="submit">QR жасау</button>
+            </form>
+        </section>
+
+        <section class="panel">
+            <h2>Белсенді QR</h2>
+            <p>Студенттерге осы кодты көрсетіңіз.</p>
+            <div class="qr-box" id="qrDisplay">
+                <div style="color:#64748b;">Әлі QR сессия жоқ</div>
+            </div>
+        </section>
+    </div>
+
+    <section class="panel" style="margin-top:14px;">
+        <h2 style="margin-bottom:8px;">Белсенді сессиялар тізімі</h2>
+        <div id="activeSessions" class="session-list"></div>
+    </section>
+
+    <section class="panel" style="margin-top:14px;">
+        <h2 style="margin-bottom:8px;">Кешігу/Қатыспау ескертулері</h2>
+        <div id="alertsList" class="session-list">
+            <div class="alert-item">Ескерту жоқ</div>
+        </div>
+    </section>
+</main>
+
+<script>
+    let currentTimer = null;
+    const shownAlertKeys = new Set();
+    let durationSeconds = 15;
+    let previousDurationUnit = 'seconds';
+
+    document.getElementById('generateForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const classId = document.getElementById('classSelect').value;
+        const room = document.getElementById('room').value.trim();
+        const unit = document.getElementById('durationUnit').value;
+        const rawValue = Number(document.getElementById('duration').value) || 1;
+        const duration = unit === 'minutes' ? rawValue * 60 : rawValue;
+        durationSeconds = duration;
+        renderDurationInput();
+
+        try {
+            const response = await fetch('/api/qr/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ classId, room, duration })
             });
-            
-            startTimer(new Date(data.expiresAt));
-        }
-        
-        function startTimer(expiresAt) {
-            if (currentTimer) clearInterval(currentTimer);
-            
-            currentTimer = setInterval(() => {
-                const now = new Date();
-                const diff = expiresAt - now;
-                
-                if (diff <= 0) {
-                    clearInterval(currentTimer);
-                    document.getElementById('timer').innerHTML = `
-                        <span style="color: var(--danger);">⏱️ Мерзімі аяқталды</span>
-                    `;
-                    document.getElementById('qrDisplay').classList.remove('active');
-                    loadActiveSessions();
-                } else {
-                    const minutes = Math.floor(diff / 60000);
-                    const seconds = Math.floor((diff % 60000) / 1000);
-                    document.getElementById('timerText').textContent = 
-                        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                }
-            }, 1000);
-        }
-        
-        async function loadActiveSessions() {
-            try {
-                const response = await fetch('/api/qr/sessions');
-                const data = await response.json();
-                
-                if (data.success && data.sessions.length > 0) {
-                    const sessionsHtml = data.sessions.map(session => `
-                        <div class="session-item">
-                            <div class="session-info">
-                                <div class="session-class">${session.className}</div>
-                                <div class="session-details">
-                                    Аудитория: ${session.room} | Код: ${session.qrCode}
-                                </div>
-                            </div>
-                            <div class="session-stats">
-                                <div class="session-count">
-                                    👥 ${session.scannedCount} студент
-                                </div>
-                                <div class="session-actions">
-                                    <button class="action-btn" onclick="viewSession('${session.id}')">
-                                        👁️ Көру
-                                    </button>
-                                    <button class="action-btn danger" onclick="endSession('${session.id}')">
-                                        ⏹️ Аяқтау
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('');
-                    
-                    document.getElementById('activeSessions').innerHTML = sessionsHtml;
-                } else {
-                    document.getElementById('activeSessions').innerHTML = `
-                        <p style="text-align: center; color: var(--gray); padding: 20px;">
-                            Белсенді сессиялар жоқ
-                        </p>
-                    `;
-                }
-            } catch (error) {
-                console.error('Error loading sessions:', error);
+            const data = await response.json();
+
+            if (!data.success) {
+                alert(data.error || 'QR код жасау кезінде қате');
+                return;
             }
+
+            renderCurrentQr(data);
+            await loadActiveSessions();
+        } catch (error) {
+            alert('Сервер қатесі');
         }
-        
-        function viewSession(sessionId) {
-            console.log('View session:', sessionId);
+    });
+
+    function onDurationUnitChange() {
+        const unit = document.getElementById('durationUnit').value;
+        const input = document.getElementById('duration');
+        const currentValue = Number(input.value) || 0;
+        durationSeconds = previousDurationUnit === 'minutes' ? currentValue * 60 : currentValue;
+        previousDurationUnit = unit;
+        renderDurationInput();
+    }
+
+    function renderDurationInput() {
+        const unit = document.getElementById('durationUnit').value;
+        const input = document.getElementById('duration');
+        if (unit === 'minutes') {
+            input.max = '60';
+            input.value = Math.max(1, Math.round(durationSeconds / 60));
+        } else {
+            input.max = '3600';
+            input.value = Math.max(1, durationSeconds);
         }
-        
-        function endSession(sessionId) {
-            if (confirm('Сессияны аяқтағыңыз келе ме?')) {
-                console.log('End session:', sessionId);
+        previousDurationUnit = unit;
+    }
+
+    function updateSelectedClassDetails() {
+        const select = document.getElementById('classSelect');
+        const selected = select.options[select.selectedIndex];
+        const roomInput = document.getElementById('room');
+        const scheduleInput = document.getElementById('classSchedule');
+
+        if (!selected || !selected.value) {
+            roomInput.value = '';
+            scheduleInput.value = '';
+            return;
+        }
+
+        const room = selected.getAttribute('data-room') || '-';
+        const day = selected.getAttribute('data-day') || '';
+        const start = selected.getAttribute('data-start') || '';
+        const end = selected.getAttribute('data-end') || '';
+
+        roomInput.value = room;
+        scheduleInput.value = `${day} ${start}${end ? ' - ' + end : ''}`.trim();
+    }
+
+    function renderCurrentQr(data) {
+        const display = document.getElementById('qrDisplay');
+        const selectedClass = document.getElementById('classSelect').selectedOptions[0]?.text || '-';
+
+        display.innerHTML = `
+            <div id="qrcode"></div>
+            <div class="qr-text">${data.qrCode}</div>
+            <div style="font-size:13px;color:#475569;">${selectedClass}</div>
+            <div class="timer" id="timerText">00:00</div>
+        `;
+
+        QRCode.toCanvas(document.createElement('canvas'), data.qrCode, { width: 220, margin: 1 }, (err, canvas) => {
+            if (err) return;
+            document.getElementById('qrcode').appendChild(canvas);
+        });
+
+        startTimer(new Date(data.expiresAt));
+    }
+
+    function startTimer(expiresAt) {
+        if (currentTimer) clearInterval(currentTimer);
+        currentTimer = setInterval(() => {
+            const diff = expiresAt - new Date();
+            const timerEl = document.getElementById('timerText');
+            if (!timerEl) return;
+
+            if (diff <= 0) {
+                clearInterval(currentTimer);
+                timerEl.textContent = 'Мерзімі аяқталды';
                 loadActiveSessions();
+                return;
             }
+
+            const mm = Math.floor(diff / 60000).toString().padStart(2, '0');
+            const ss = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+            timerEl.textContent = `${mm}:${ss}`;
+        }, 1000);
+    }
+
+    async function loadActiveSessions() {
+        try {
+            const response = await fetch('/api/qr/sessions');
+            const data = await response.json();
+            const container = document.getElementById('activeSessions');
+
+            if (!data.success || !data.sessions || !data.sessions.length) {
+                container.innerHTML = '<div style="color:#64748b;">Белсенді сессиялар жоқ</div>';
+                return;
+            }
+
+            container.innerHTML = data.sessions.map(session => `
+                <div class="session-item">
+                    <div>
+                        <div class="session-title">${escapeHtml(session.className || '-')}</div>
+                        <div class="session-meta">Аудитория: ${escapeHtml(session.room || '-')} | Код: ${escapeHtml(session.qrCode || '-')}</div>
+                        <div class="session-meta">Оқытушы: ${escapeHtml(session.teacherName || '-')}</div>
+                    </div>
+                    <div class="session-right">
+                        <span class="pill">${session.scannedCount || 0} студент</span>
+                        <button class="btn btn-danger" onclick="endSession('${session.id}')">Аяқтау</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('sessions error', error);
         }
-        
-        loadActiveSessions();
-        
-        setInterval(loadActiveSessions, 10000);
-    </script>
+    }
+
+    async function endSession(id) {
+        if (!confirm('Сессияны аяқтайсыз ба?')) return;
+        try {
+            const response = await fetch(`/api/qr/sessions/${id}/end`, { method: 'POST' });
+            const data = await response.json();
+            if (!data.success) {
+                alert(data.error || 'Сессияны аяқтау мүмкін болмады');
+                return;
+            }
+            await loadActiveSessions();
+        } catch (_) {
+            alert('Сервер қатесі');
+        }
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    loadActiveSessions();
+    setInterval(loadActiveSessions, 10000);
+    renderDurationInput();
+    document.getElementById('classSelect').addEventListener('change', updateSelectedClassDetails);
+
+    async function loadAttendanceAlerts() {
+        try {
+            const data = await fetch('/api/alerts/attendance').then(r => r.json());
+            if (!data.success) return;
+            renderAlerts(data.alerts || []);
+            showBrowserNotifications(data.alerts || []);
+        } catch (error) {
+            console.error('alerts error', error);
+        }
+    }
+
+    function renderAlerts(alerts) {
+        const list = document.getElementById('alertsList');
+        if (!alerts.length) {
+            list.innerHTML = '<div class="alert-item">Ескерту жоқ</div>';
+            return;
+        }
+        list.innerHTML = alerts.slice(0, 8).map(a => `
+            <div class="alert-item ${a.severity === 'HIGH' ? 'high' : 'medium'}">
+                <strong>${a.type === 'ABSENT' ? 'Қатыспады' : 'Өте кешікті'}:</strong>
+                ${a.studentName} (${a.group}) - ${a.className}
+            </div>
+        `).join('');
+    }
+
+    function showBrowserNotifications(alerts) {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+        alerts.forEach(a => {
+            if (shownAlertKeys.has(a.key)) return;
+            shownAlertKeys.add(a.key);
+            new Notification(a.type === 'ABSENT' ? 'Сабаққа келмеді' : 'Өте кешігуде', {
+                body: `${a.studentName} - ${a.className} (${a.group})`
+            });
+        });
+    }
+
+    async function enablePush() {
+        if (!('Notification' in window)) {
+            alert('Бұл браузерде push қолдау жоқ');
+            return;
+        }
+        if (Notification.permission === 'granted') {
+            alert('Push ескертулер белсенді');
+            return;
+        }
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            alert('Push ескертулер қосылды');
+            loadAttendanceAlerts();
+        } else {
+            alert('Push рұқсаты берілмеді');
+        }
+    }
+
+    loadAttendanceAlerts();
+    setInterval(loadAttendanceAlerts, 30000);
+</script>
+<script src="/js/app-prefs.js"></script>
 </body>
 </html>

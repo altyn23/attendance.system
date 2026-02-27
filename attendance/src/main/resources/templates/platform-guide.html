@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Платформа ережелері</title>
+    <style>
+        :root {
+            --text-main: #1e293b;
+            --muted: #64748b;
+            --panel: rgba(255,255,255,0.95);
+            --bg-main: linear-gradient(120deg, #eef6ff 0%, #dbeafe 55%, #e0f2fe 100%);
+            --header-bg: linear-gradient(120deg, #1e3a8a 0%, #2563eb 100%);
+            --accent: #2563eb;
+            --line: #cbd5e1;
+        }
+        [data-theme="dark"] {
+            --text-main: #e5e7eb;
+            --muted: #94a3b8;
+            --panel: rgba(17,24,39,0.92);
+            --bg-main: linear-gradient(120deg, #0b1228 0%, #111827 55%, #0f172a 100%);
+            --header-bg: linear-gradient(120deg, #0f172a 0%, #1e3a8a 100%);
+            --accent: #60a5fa;
+            --line: #334155;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+        }
+        .topbar {
+            background: var(--header-bg);
+            color: #fff;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .topbar h1 { margin: 0; font-size: 24px; }
+        .top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn {
+            border: 1px solid rgba(255,255,255,.3);
+            background: rgba(255,255,255,.15);
+            color: #fff;
+            border-radius: 10px;
+            padding: 8px 12px;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn.active {
+            background: rgba(255,255,255,.28);
+            border-color: rgba(34, 211, 238, 0.8);
+        }
+        .container {
+            max-width: 1100px;
+            margin: 16px auto 28px;
+            padding: 0 16px;
+            display: grid;
+            gap: 14px;
+        }
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 10px 24px rgba(0,0,0,.12);
+        }
+        .card h2 { margin: 0 0 8px; }
+        .card p { margin: 0; color: var(--muted); line-height: 1.5; }
+        ul {
+            margin: 8px 0 0;
+            padding-left: 20px;
+            color: var(--text-main);
+        }
+        li { margin-bottom: 6px; }
+        .highlight {
+            border-left: 4px solid var(--accent);
+            padding-left: 14px;
+        }
+    </style>
+</head>
+<body>
+<header class="topbar">
+    <h1>Платформа ережелері және қолдану тәртібі</h1>
+    <div class="top-actions">
+        <a href="/dashboard" class="btn">Басты бет</a>
+        <button class="btn" id="themeBtn" onclick="toggleTheme()">Dark</button>
+        <button class="btn" id="langKzBtn" onclick="setLang('kz')">KZ</button>
+        <button class="btn" id="langRuBtn" onclick="setLang('ru')">RU</button>
+    </div>
+</header>
+
+<main class="container">
+    <section class="card highlight">
+        <h2>Платформа не үшін керек</h2>
+        <p>Бұл жүйе сабаққа қатысуды ашық тіркеу, кестені басқару, өзгерістер туралы жедел хабарлау және әкімшілік шешімдерді жылдам қабылдау үшін қолданылады.</p>
+    </section>
+
+    <section class="card">
+        <h2>Негізгі рөлдер</h2>
+        <ul>
+            <li>Студент: қатысу белгілеу, себеп жіберу, хабарландыру алу.</li>
+            <li>Оқытушы: тек өзіне тағайындалған сабақтармен жұмыс істеу, QR сессия ашу, әкімшілікке онлайн сұраныс жіберу.</li>
+            <li>Әкімші: сабақ/аудитория/уақыт тағайындау, өзгерістер енгізу, себептерді қарау және бекіту.</li>
+        </ul>
+    </section>
+
+    <section class="card">
+        <h2>Платформаны пайдалану ережелері</h2>
+        <ul>
+            <li>Әр қолданушы тек өз аккаунтымен кіруі керек.</li>
+            <li>Логин мен құпиясөзді үшінші тұлғаға беруге болмайды.</li>
+            <li>Кестедегі өзгеріс тек себебімен сақталады және тарихта қалады.</li>
+            <li>Пропуск/кешігу бойынша жауап шынайы ақпаратпен толтырылуы керек.</li>
+            <li>Жалған ақпарат берілген жағдайда әкімшілік тексеру жүргізе алады.</li>
+        </ul>
+    </section>
+
+    <section class="card">
+        <h2>Техника және қолдану тәртібі</h2>
+        <ul>
+            <li>Тіл: KZ/RU, тақырып: Light/Dark батырмаларымен ауысады.</li>
+            <li>QR қатысу белгілеу кезінде камераға рұқсат беру қажет.</li>
+            <li>Ақау болғанда бетті жаңартып, қайта кіру ұсынылады.</li>
+            <li>Деректердің өзектілігі үшін кэшті сирек тазалап тұрыңыз.</li>
+            <li>Маңызды өзгерістер «Хабарландырулар» бетінде көрсетіледі.</li>
+        </ul>
+    </section>
+
+    <section class="card">
+        <h2>Онлайн өтінімдер қалай жұмыс істейді</h2>
+        <p>Оқытушы сабақ ауыстыру/өзгертуге сұраныс жібереді. Әкімшілік шешім қабылдайды, содан кейін қатысы бар топтар мен оқытушыларға хабарлама автоматты түрде түседі.</p>
+    </section>
+</main>
+<script src="/js/app-prefs.js"></script>
+</body>
+</html>

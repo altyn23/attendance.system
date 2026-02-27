@@ -2,685 +2,341 @@
 <html lang="kk" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Жүйе есептері - Attendance System</title>
+    <title>Жүйе есептері</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary: #6366F1;
-            --primary-dark: #4F46E5;
-            --success: #10B981;
-            --danger: #EF4444;
-            --warning: #F59E0B;
-            --dark: #1F2937;
-            --gray: #6B7280;
-            --light: #F9FAFB;
+            --bg-1:#102447; --bg-2:#1f3f7a;
+            --panel:rgba(255,255,255,.92); --panel-solid:#ffffff;
+            --text:#0f172a; --muted:#64748b; --line:#dbe4f0;
+            --brand:#2257c7; --brand-2:#3b82f6; --ok:#16a34a; --warn:#f59e0b; --danger:#dc2626;
         }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        [data-theme="dark"] {
+            --bg-1:#050910; --bg-2:#0f172a;
+            --panel:rgba(15,23,42,.92); --panel-solid:#111827;
+            --text:#e5e7eb; --muted:#9ca3af; --line:#263244;
+            --brand:#3b82f6; --brand-2:#6366f1; --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444;
         }
-        
+        * { box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            margin: 0; min-height: 100vh;
+            font-family: "Inter", "Manrope", "Segoe UI", sans-serif;
+            background: radial-gradient(circle at 10% -20%, #4f46e5 0%, transparent 45%),
+                        radial-gradient(circle at 90% 120%, #0ea5a4 0%, transparent 40%),
+                        linear-gradient(135deg, var(--bg-1), var(--bg-2));
+            color: var(--text);
         }
-        
-        .navbar {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        .topbar {
+            max-width: 1240px; margin: 0 auto; padding: 20px;
+            display: flex; justify-content: space-between; align-items: center; gap: 12px; color: #f8fafc;
         }
-        
-        .navbar h1 {
-            color: white;
-            font-size: 24px;
+        .title { font-size: 26px; font-weight: 800; }
+        .top-actions { display:flex; gap:10px; flex-wrap:wrap; }
+        .link-btn {
+            border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.14);
+            color:#fff; text-decoration:none; padding:9px 14px; border-radius:10px; font-weight:600; cursor:pointer;
         }
-        
-        .nav-right {
-            display: flex;
-            gap: 15px;
-            align-items: center;
+
+        .page { max-width: 1240px; margin: 0 auto; padding: 0 20px 26px; }
+        .panel {
+            background: var(--panel); border-radius: 18px; border:1px solid rgba(255,255,255,.35);
+            box-shadow: 0 14px 34px rgba(2,6,23,.2); padding: 18px;
         }
-        
-        .profile-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            position: relative;
+        .header-row { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom: 14px; }
+        .header-row h2 { margin:0; font-size:28px; }
+        .filter { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+        .filter input {
+            border:1px solid var(--line); border-radius:10px; padding:9px 10px;
+            background: var(--panel-solid); color: var(--text);
         }
-        
-        .profile-menu {
-            position: absolute;
-            top: 50px;
-            right: 0;
-            background: white;
-            border-radius: 10px;
-            padding: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            display: none;
-            min-width: 200px;
-            z-index: 1000;
-        }
-        
-        .profile-menu.show {
-            display: block;
-        }
-        
-        .profile-menu a {
-            display: block;
-            padding: 10px;
-            color: var(--dark);
-            text-decoration: none;
-            border-radius: 5px;
-        }
-        
-        .profile-menu a:hover {
-            background: var(--light);
-        }
-        
-        .nav-btn {
-            padding: 8px 20px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 10px;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-        
-        .nav-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-        
-        .page-header {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        
-        .header-content h2 {
-            color: var(--dark);
-            font-size: 32px;
-        }
-        
-        .date-filter {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        
-        .date-filter input {
-            padding: 8px 15px;
-            border: 2px solid #E5E7EB;
-            border-radius: 10px;
-            font-size: 14px;
-        }
-        
         .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
+            border:none; border-radius:10px; padding:10px 14px; color:#fff; font-weight:700; cursor:pointer;
+            background: linear-gradient(90deg, var(--brand), var(--brand-2));
         }
-        
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: var(--primary-dark);
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        .stat-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            margin-bottom: 15px;
-        }
-        
-        .stat-icon.blue {
-            background: #DBEAFE;
-            color: #2563EB;
-        }
-        
-        .stat-icon.green {
-            background: #D1FAE5;
-            color: #059669;
-        }
-        
-        .stat-icon.yellow {
-            background: #FEF3C7;
-            color: #D97706;
-        }
-        
-        .stat-icon.red {
-            background: #FEE2E2;
-            color: #DC2626;
-        }
-        
-        .stat-number {
-            font-size: 32px;
-            font-weight: bold;
-            color: var(--dark);
-            margin-bottom: 5px;
-        }
-        
-        .stat-label {
-            color: var(--gray);
-            font-size: 14px;
-        }
-        
-        .stat-change {
-            margin-top: 10px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .stat-change.positive {
-            color: var(--success);
-        }
-        
-        .stat-change.negative {
-            color: var(--danger);
-        }
-        
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .chart-card {
-            background: white;
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        
-        .chart-card h3 {
-            color: var(--dark);
-            margin-bottom: 20px;
-            font-size: 20px;
-        }
-        
-        .report-table {
-            background: white;
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        
-        .report-table h3 {
-            color: var(--dark);
-            margin-bottom: 20px;
-            font-size: 20px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        th {
-            background: var(--light);
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
-            color: var(--dark);
-            border-bottom: 2px solid #E5E7EB;
-        }
-        
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #E5E7EB;
-        }
-        
-        tr:hover {
-            background: #F9FAFB;
-        }
-        
-        .attendance-badge {
-            padding: 4px 10px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .attendance-high {
-            background: #D1FAE5;
-            color: #059669;
-        }
-        
-        .attendance-medium {
-            background: #FEF3C7;
-            color: #D97706;
-        }
-        
-        .attendance-low {
-            background: #FEE2E2;
-            color: #DC2626;
-        }
-        
-        .export-section {
-            background: white;
-            border-radius: 20px;
-            padding: 25px;
-            margin-top: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        
-        .export-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
+
+        .alerts-panel { margin-bottom: 14px; }
+        .alerts-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+        .alerts-list { display:grid; gap:8px; }
+        .alert-item { border:1px solid var(--line); border-radius:10px; padding:10px; background: var(--panel-solid); font-size:13px; }
+        .alert-item.high { border-color:#fecaca; background:#fff1f2; color:#7f1d1d; }
+        .alert-item.medium { border-color:#fde68a; background:#fffbeb; color:#78350f; }
+
+        .stats { display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin-bottom:14px; }
+        .stat { background: var(--panel-solid); border:1px solid var(--line); border-radius:12px; padding:12px; }
+        .stat .n { font-size:28px; font-weight:800; }
+        .stat .l { color:var(--muted); font-size:13px; margin-top:4px; }
+
+        .charts { display:grid; grid-template-columns: repeat(auto-fit,minmax(320px,1fr)); gap:12px; margin-bottom:14px; }
+        .chart-card { background: var(--panel-solid); border:1px solid var(--line); border-radius:12px; padding:12px; }
+        .chart-card h3 { margin:0 0 10px; font-size:16px; }
+
+        .report-table { margin-top: 14px; background: var(--panel-solid); border:1px solid var(--line); border-radius:12px; padding:12px; overflow:auto; }
+        .report-table h3 { margin:0 0 10px; }
+        table { width:100%; border-collapse: collapse; min-width: 720px; }
+        th, td { padding:10px; border-bottom:1px solid var(--line); font-size:14px; text-align:left; }
+        th { background: rgba(148,163,184,.12); }
+        .attendance-badge { padding:4px 9px; border-radius:999px; font-size:12px; font-weight:700; }
+        .attendance-high { background:#dcfce7; color:#166534; }
+        .attendance-medium { background:#fef3c7; color:#92400e; }
+        .attendance-low { background:#fee2e2; color:#991b1b; }
+
+        .export { margin-top: 14px; display:flex; gap:8px; flex-wrap:wrap; }
+        @media (max-width: 720px) { .header-row h2{font-size:24px;} }
     </style>
 </head>
 <body>
-    <div class="navbar">
-        <h1>📊 Жүйе есептері</h1>
-        <div class="nav-right">
-            <a href="/dashboard" class="nav-btn">📊 Dashboard</a>
-            <div class="profile-icon" onclick="toggleProfile()" th:text="${#strings.substring(fullName, 0, 1)}">A</div>
-            <div class="profile-menu" id="profileMenu">
-                <a href="/profile">👤 Менің профилім</a>
-                <a href="/settings">⚙️ Баптаулар</a>
-                <a href="#" onclick="logout()">🚪 Шығу</a>
-            </div>
-        </div>
+<header class="topbar">
+    <div class="title">Жүйе есептері</div>
+    <div class="top-actions">
+        <a href="/dashboard" class="link-btn">Басты бет</a>
+        <a href="/profile" class="link-btn">Профиль</a>
+        <button class="link-btn" id="themeBtn" onclick="toggleTheme()">Тема</button>
+        <button class="link-btn" onclick="logout()">Шығу</button>
     </div>
+</header>
 
-    <div class="container">
-        <div class="page-header">
-            <div class="header-content">
-                <h2>Жүйе статистикасы және есептер</h2>
-                <div class="date-filter">
-                    <input type="date" id="startDate">
-                    <span>-</span>
-                    <input type="date" id="endDate">
-                    <button class="btn btn-primary" onclick="filterReports()">Сүзу</button>
-                </div>
+<main class="page">
+    <section class="panel">
+        <div class="header-row">
+            <h2>Жүйе статистикасы</h2>
+            <div class="filter">
+                <input type="date" id="startDate">
+                <span>-</span>
+                <input type="date" id="endDate">
+                <button class="btn" onclick="filterReports()">Сүзу</button>
+                <button class="btn" onclick="enablePush()">Push қосу</button>
             </div>
         </div>
 
-        <!-- Statistics Cards -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon blue">📚</div>
-                <div class="stat-number" id="totalClasses">0</div>
-                <div class="stat-label">Барлық сабақтар</div>
-                <div class="stat-change positive">↑ 12% өткен айдан</div>
+        <div class="alerts-panel">
+            <div class="alerts-head">
+                <h3>Кешігу/Қатыспау ескертулері</h3>
+                <strong id="alertsCount">0</strong>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon green">✅</div>
-                <div class="stat-number" id="totalAttendance">0</div>
-                <div class="stat-label">Жалпы қатысу</div>
-                <div class="stat-change positive">↑ 8% өткен аптадан</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon yellow">👥</div>
-                <div class="stat-number" id="activeStudents">0</div>
-                <div class="stat-label">Белсенді студенттер</div>
-                <div class="stat-change negative">↓ 3% кеше</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon red">📈</div>
-                <div class="stat-number" id="avgAttendance">0%</div>
-                <div class="stat-label">Орташа қатысу</div>
-                <div class="stat-change positive">↑ 5% өткен семестрден</div>
-            </div>
+            <div class="alerts-list" id="alertsList"><div class="alert-item">Ескерту жоқ</div></div>
         </div>
 
-        <!-- Charts -->
-        <div class="charts-grid">
-            <div class="chart-card">
-                <h3>📊 Апталық қатысу трендтері</h3>
-                <canvas id="attendanceChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <h3>📈 Топтар бойынша қатысу</h3>
-                <canvas id="groupChart"></canvas>
-            </div>
+        <div class="stats">
+            <div class="stat"><div class="n" id="totalClasses">0</div><div class="l">Барлық сабақтар</div></div>
+            <div class="stat"><div class="n" id="totalAttendance">0</div><div class="l">Бүгінгі қатысу жазбалары</div></div>
+            <div class="stat"><div class="n" id="activeStudents">0</div><div class="l">Белсенді студенттер</div></div>
+            <div class="stat"><div class="n" id="avgAttendance">0%</div><div class="l">Орташа қатысу</div></div>
         </div>
 
-        <div class="charts-grid">
-            <div class="chart-card">
-                <h3>🕐 Сабақ уақыттары бойынша қатысу</h3>
-                <canvas id="timeChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <h3>📱 QR сканерлеу статистикасы</h3>
-                <canvas id="qrChart"></canvas>
-            </div>
+        <div class="charts">
+            <div class="chart-card"><h3>Апталық тренд</h3><canvas id="attendanceChart"></canvas></div>
+            <div class="chart-card"><h3>Топтар бойынша</h3><canvas id="groupChart"></canvas></div>
+            <div class="chart-card"><h3>Сабақ уақыты</h3><canvas id="timeChart"></canvas></div>
+            <div class="chart-card"><h3>QR статистика</h3><canvas id="qrChart"></canvas></div>
         </div>
 
-        <!-- Top Students Table -->
         <div class="report-table">
-            <h3>🏆 Үздік студенттер (қатысу бойынша)</h3>
+            <h3>Үздік студенттер</h3>
             <table>
                 <thead>
-                    <tr>
-                        <th>Рейтинг</th>
-                        <th>Студент</th>
-                        <th>Топ</th>
-                        <th>Қатысу %</th>
-                        <th>Сабақтар</th>
-                        <th>Статус</th>
-                    </tr>
+                <tr><th>#</th><th>Студент</th><th>Топ</th><th>Қатысу %</th><th>Жазба</th><th>Баға</th></tr>
                 </thead>
-                <tbody id="topStudentsTable">
-                    <!-- Will be populated by JavaScript -->
-                </tbody>
+                <tbody id="topStudentsTable"></tbody>
             </table>
         </div>
 
-        <!-- Classes Report Table -->
-        <div class="report-table" style="margin-top: 30px;">
-            <h3>📚 Сабақтар бойынша есеп</h3>
+        <div class="report-table">
+            <h3>Сабақтар бойынша есеп</h3>
             <table>
                 <thead>
-                    <tr>
-                        <th>Сабақ</th>
-                        <th>Оқытушы</th>
-                        <th>Топ</th>
-                        <th>Студенттер</th>
-                        <th>Орт. қатысу</th>
-                        <th>Соңғы сабақ</th>
-                    </tr>
+                <tr><th>Сабақ</th><th>Оқытушы</th><th>Топ</th><th>Студенттер</th><th>Орташа</th><th>Соңғы күн</th></tr>
                 </thead>
-                <tbody id="classesReportTable">
-                    <!-- Will be populated by JavaScript -->
-                </tbody>
+                <tbody id="classesReportTable"></tbody>
             </table>
         </div>
 
-        <div class="export-section">
-            <h3>📥 Есептерді экспорттау</h3>
-            <div class="export-buttons">
-                <button class="btn btn-primary" onclick="exportPDF()">📄 PDF жүктеу</button>
-                <button class="btn btn-primary" onclick="exportExcel()">📊 Excel жүктеу</button>
-                <button class="btn btn-primary" onclick="exportCSV()">📁 CSV жүктеу</button>
-                <button class="btn btn-primary" onclick="printReport()">🖨️ Басып шығару</button>
-            </div>
+        <div class="export">
+            <button class="btn" onclick="exportPDF()">PDF</button>
+            <button class="btn" onclick="exportExcel()">Excel</button>
+            <button class="btn" onclick="exportCSV()">CSV</button>
+            <button class="btn" onclick="printReport()">Print</button>
         </div>
-    </div>
+    </section>
+</main>
 
-    <script>
-        const ctx1 = document.getElementById('attendanceChart').getContext('2d');
-        const attendanceChart = new Chart(ctx1, {
-            type: 'line',
-            data: {
-                labels: ['Дүйсенбі', 'Сейсенбі', 'Сәрсенбі', 'Бейсенбі', 'Жұма'],
-                datasets: [{
-                    label: 'Қатысу %',
-                    data: [85, 88, 82, 90, 87],
-                    borderColor: '#6366F1',
-                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                    tension: 0.3
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100
-                    }
-                }
-            }
+<script>
+    function applyTheme() {
+        const theme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        document.getElementById('themeBtn').textContent = theme === 'dark' ? 'Light' : 'Dark';
+    }
+    function toggleTheme() {
+        const current = localStorage.getItem('theme') || 'light';
+        localStorage.setItem('theme', current === 'dark' ? 'light' : 'dark');
+        applyTheme();
+    }
+
+    const ctx1 = document.getElementById('attendanceChart').getContext('2d');
+    const attendanceChart = new Chart(ctx1, {
+        type: 'line',
+        data: { labels: ['Дс','Сс','Ср','Бс','Жм'], datasets: [{ data:[85,88,82,90,87], borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.12)', tension:.3 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+    });
+
+    const ctx2 = document.getElementById('groupChart').getContext('2d');
+    const groupChart = new Chart(ctx2, {
+        type: 'bar',
+        data: { labels: ['ИС-2101','ИС-2102','ИС-2103','ИС-2104'], datasets: [{ data:[92,85,88,79], backgroundColor:['#10B981','#F59E0B','#6366F1','#EF4444'] }] },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+
+    const ctx3 = document.getElementById('timeChart').getContext('2d');
+    new Chart(ctx3, {
+        type: 'doughnut',
+        data: { labels:['9:00','11:00','14:00','16:00'], datasets:[{ data:[95,88,75,82], backgroundColor:['#10B981','#6366F1','#F59E0B','#EF4444'] }] },
+        options: { responsive: true }
+    });
+
+    const ctx4 = document.getElementById('qrChart').getContext('2d');
+    new Chart(ctx4, {
+        type: 'bar',
+        data: { labels:['Сәтті','Кешігіп','Мерзімі өткен','Қате'], datasets:[{ data:[450,62,28,15], backgroundColor:['#10B981','#F59E0B','#6B7280','#EF4444'] }] },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+
+    async function loadReports() {
+        try {
+            const [classes, attendance, users] = await Promise.all([
+                fetch('/api/classes').then(r => r.json()),
+                fetch('/api/attendance/all').then(r => r.json()),
+                fetch('/api/users').then(r => r.json())
+            ]);
+
+            document.getElementById('totalClasses').textContent = classes.length;
+            const today = new Date().toISOString().slice(0, 10);
+            const todayAttendance = attendance.filter(a => (a.date || '').slice(0, 10) === today);
+            document.getElementById('totalAttendance').textContent = todayAttendance.length;
+            document.getElementById('activeStudents').textContent = users.filter(u => u.role === 'STUDENT').length;
+
+            const avgRate = attendance.length > 0 ? Math.round(attendance.filter(a => a.status === 'PRESENT' || a.status === 'LATE' || a.present === true).length / attendance.length * 100) : 0;
+            document.getElementById('avgAttendance').textContent = avgRate + '%';
+
+            loadTopStudents(users, attendance);
+            loadClassesReport(classes, users, attendance);
+        } catch (error) {
+            console.error('Error loading reports:', error);
+        }
+    }
+
+    function loadTopStudents(users, attendance) {
+        const tbody = document.getElementById('topStudentsTable');
+        tbody.innerHTML = '';
+        const students = users.filter(u => u.role === 'STUDENT');
+        const byStudent = {};
+        attendance.forEach(item => {
+            if (!item.studentId) return;
+            if (!byStudent[item.studentId]) byStudent[item.studentId] = { total: 0, good: 0 };
+            byStudent[item.studentId].total += 1;
+            if (item.status === 'PRESENT' || item.status === 'LATE' || item.present === true) byStudent[item.studentId].good += 1;
         });
 
-        const ctx2 = document.getElementById('groupChart').getContext('2d');
-        const groupChart = new Chart(ctx2, {
-            type: 'bar',
-            data: {
-                labels: ['ИС-2101', 'ИС-2102', 'ИС-2103', 'ИС-2104'],
-                datasets: [{
-                    label: 'Қатысу %',
-                    data: [92, 85, 88, 79],
-                    backgroundColor: ['#10B981', '#F59E0B', '#6366F1', '#EF4444']
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
+        const top = students.map(s => {
+            const stat = byStudent[s.id] || { total: 0, good: 0 };
+            const rate = stat.total > 0 ? Math.round((stat.good / stat.total) * 100) : 0;
+            const name = `${s.firstName || ''} ${s.lastName || ''}`.trim();
+            if (!name || /^S\d{3}\s+Student$/i.test(name)) {
+                return null;
             }
+            return { name, group: s.group || '-', attendance: rate, classes: stat.total };
+        }).filter(Boolean).sort((a,b) => b.attendance - a.attendance).slice(0,5);
+
+        top.forEach((st, idx) => {
+            const badge = st.attendance >= 95 ? 'attendance-high' : st.attendance >= 80 ? 'attendance-medium' : 'attendance-low';
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${idx + 1}</td><td>${st.name || '-'}</td><td>${st.group}</td><td>${st.attendance}%</td><td>${st.classes}</td><td><span class="attendance-badge ${badge}">${st.attendance >= 95 ? 'Үздік' : st.attendance >= 80 ? 'Жақсы' : 'Төмен'}</span></td>`;
+            tbody.appendChild(row);
         });
+    }
 
-        const ctx3 = document.getElementById('timeChart').getContext('2d');
-        const timeChart = new Chart(ctx3, {
-            type: 'doughnut',
-            data: {
-                labels: ['9:00-10:30', '11:00-12:30', '14:00-15:30', '16:00-17:30'],
-                datasets: [{
-                    data: [95, 88, 75, 82],
-                    backgroundColor: ['#10B981', '#6366F1', '#F59E0B', '#EF4444']
-                }]
-            },
-            options: {
-                responsive: true
-            }
+    function loadClassesReport(classes, users, attendance) {
+        const tbody = document.getElementById('classesReportTable');
+        tbody.innerHTML = '';
+        classes.slice(0,10).forEach(cls => {
+            const groupStudents = users.filter(u => u.role === 'STUDENT' && (u.group || '') === (cls.group || ''));
+            const classAttendance = attendance.filter(a => a.classId === cls.id);
+            const good = classAttendance.filter(a => a.status === 'PRESENT' || a.status === 'LATE' || a.present === true).length;
+            const rate = classAttendance.length > 0 ? Math.round((good / classAttendance.length) * 100) : 0;
+            const lastDate = classAttendance.length > 0 && classAttendance[0].date ? classAttendance[0].date : new Date().toLocaleDateString('kk-KZ');
+
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${cls.name || '-'}</td><td>${cls.teacherName || 'Тағайындалмаған'}</td><td>${cls.group || '-'}</td><td>${groupStudents.length}</td><td>${rate}%</td><td>${lastDate}</td>`;
+            tbody.appendChild(row);
         });
+    }
 
-        const ctx4 = document.getElementById('qrChart').getContext('2d');
-        const qrChart = new Chart(ctx4, {
-            type: 'bar',
-            data: {
-                labels: ['Сәтті', 'Кешігіп', 'Мерзімі өткен', 'Қате'],
-                datasets: [{
-                    label: 'QR сканерлеу',
-                    data: [450, 62, 28, 15],
-                    backgroundColor: ['#10B981', '#F59E0B', '#6B7280', '#EF4444']
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
-            }
+    const shownAlertKeys = new Set();
+    async function loadAttendanceAlerts() {
+        try {
+            const data = await fetch('/api/alerts/attendance').then(r => r.json());
+            if (!data.success) return;
+            const alerts = data.alerts || [];
+            document.getElementById('alertsCount').textContent = alerts.length;
+            renderAlerts(alerts);
+            showBrowserNotifications(alerts);
+        } catch (error) {
+            console.error('alerts error', error);
+        }
+    }
+
+    function renderAlerts(alerts) {
+        const list = document.getElementById('alertsList');
+        if (!alerts.length) {
+            list.innerHTML = '<div class="alert-item">Ескерту жоқ</div>';
+            return;
+        }
+        list.innerHTML = alerts.slice(0, 10).map(a => `<div class="alert-item ${a.severity === 'HIGH' ? 'high' : 'medium'}"><strong>${a.type === 'ABSENT' ? 'Қатыспады' : 'Өте кешікті'}:</strong> ${a.studentName} (${a.group}) - ${a.className}</div>`).join('');
+    }
+
+    function showBrowserNotifications(alerts) {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+        alerts.forEach(a => {
+            if (shownAlertKeys.has(a.key)) return;
+            shownAlertKeys.add(a.key);
+            new Notification(a.type === 'ABSENT' ? 'Сабаққа келмеді' : 'Өте кешігуде', { body: `${a.studentName} - ${a.className} (${a.group})` });
         });
+    }
 
-        async function loadReports() {
-            try {
-                const [classes, attendance, users] = await Promise.all([
-                    fetch('/api/classes').then(r => r.json()),
-                    fetch('/api/attendance/today').then(r => r.json()),
-                    fetch('/api/auth/users').then(r => r.json())
-                ]);
+    async function enablePush() {
+        if (!('Notification' in window)) { alert('Бұл браузерде push қолдау жоқ'); return; }
+        if (Notification.permission === 'granted') { alert('Push ескертулер белсенді'); return; }
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') { alert('Push ескертулер қосылды'); loadAttendanceAlerts(); }
+        else { alert('Push рұқсаты берілмеді'); }
+    }
 
-                document.getElementById('totalClasses').textContent = classes.length;
-                document.getElementById('totalAttendance').textContent = attendance.length;
-                document.getElementById('activeStudents').textContent = 
-                    users.filter(u => u.role === 'STUDENT').length;
-                
-                const avgRate = attendance.length > 0 
-                    ? Math.round(attendance.filter(a => a.present).length / attendance.length * 100)
-                    : 0;
-                document.getElementById('avgAttendance').textContent = avgRate + '%';
+    function filterReports() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        if (startDate && endDate) loadReports();
+    }
+    function exportPDF() { alert('PDF дайындалуда...'); }
+    function exportExcel() { alert('Excel дайындалуда...'); }
+    function exportCSV() {
+        const data = 'Студент,Топ,Қатысу\n';
+        const blob = new Blob([data], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'attendance-report.csv';
+        a.click();
+    }
+    function printReport() { window.print(); }
+    function logout() { fetch('/api/auth/logout', { method: 'POST' }).then(() => window.location.href = '/login'); }
 
-                loadTopStudents();
-                
-                loadClassesReport();
-                
-            } catch (error) {
-                console.error('Error loading reports:', error);
-            }
-        }
+    document.getElementById('startDate').valueAsDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    document.getElementById('endDate').valueAsDate = new Date();
 
-        async function loadTopStudents() {
-            try {
-                const users = await fetch('/api/auth/users').then(r => r.json());
-                const students = users.filter(u => u.role === 'STUDENT');
-                
-                const tbody = document.getElementById('topStudentsTable');
-                tbody.innerHTML = '';
-                
-                const topStudents = [
-                    { name: 'Айдана Қасымова', group: 'ИС-2101', attendance: 98, classes: 45 },
-                    { name: 'Ерлан Сәрсенбаев', group: 'ИС-2102', attendance: 95, classes: 43 },
-                    { name: 'Гүлнәр Ахметова', group: 'ИС-2101', attendance: 93, classes: 42 },
-                    { name: 'Нұрлан Жұмабеков', group: 'ИС-2103', attendance: 91, classes: 41 },
-                    { name: 'Айгерім Мұратова', group: 'ИС-2102', attendance: 89, classes: 40 }
-                ];
-                
-                topStudents.forEach((student, index) => {
-                    const row = document.createElement('tr');
-                    const badgeClass = student.attendance >= 95 ? 'attendance-high' : 
-                                      student.attendance >= 80 ? 'attendance-medium' : 'attendance-low';
-                    
-                    row.innerHTML = `
-                        <td>${index + 1}</td>
-                        <td>${student.name}</td>
-                        <td>${student.group}</td>
-                        <td>${student.attendance}%</td>
-                        <td>${student.classes}</td>
-                        <td><span class="attendance-badge ${badgeClass}">
-                            ${student.attendance >= 95 ? 'Үздік' : 
-                              student.attendance >= 80 ? 'Жақсы' : 'Төмен'}
-                        </span></td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            } catch (error) {
-                console.error('Error loading top students:', error);
-            }
-        }
-
-        async function loadClassesReport() {
-            try {
-                const classes = await fetch('/api/classes').then(r => r.json());
-                const tbody = document.getElementById('classesReportTable');
-                tbody.innerHTML = '';
-                
-                classes.slice(0, 5).forEach(cls => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${cls.name}</td>
-                        <td>${cls.teacherName || 'Тағайындалмаған'}</td>
-                        <td>${cls.group}</td>
-                        <td>${Math.floor(Math.random() * 20) + 15}</td>
-                        <td>${Math.floor(Math.random() * 15) + 80}%</td>
-                        <td>${new Date().toLocaleDateString('kk-KZ')}</td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            } catch (error) {
-                console.error('Error loading classes report:', error);
-            }
-        }
-
-        function filterReports() {
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-            
-            if (startDate && endDate) {
-                alert(`Есептер ${startDate} - ${endDate} аралығы үшін жаңартылды`);
-                loadReports();
-            }
-        }
-
-        function exportPDF() {
-            alert('PDF есебі дайындалуда...');
-        }
-
-        function exportExcel() {
-            alert('Excel есебі дайындалуда...');
-        }
-
-        function exportCSV() {
-            const data = 'Студент,Топ,Қатысу\nАйдана,ИС-2101,98%\nЕрлан,ИС-2102,95%';
-            const blob = new Blob([data], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'attendance-report.csv';
-            a.click();
-        }
-
-        function printReport() {
-            window.print();
-        }
-
-        function toggleProfile() {
-            document.getElementById('profileMenu').classList.toggle('show');
-        }
-
-        function logout() {
-            fetch('/api/auth/logout', { method: 'POST' })
-                .then(() => window.location.href = '/login');
-        }
-
-        document.getElementById('startDate').valueAsDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        document.getElementById('endDate').valueAsDate = new Date();
-
-        loadReports();
-    </script>
+    applyTheme();
+    loadReports();
+    loadAttendanceAlerts();
+    setInterval(loadAttendanceAlerts, 30000);
+</script>
+<script src="/js/app-prefs.js"></script>
 </body>
 </html>

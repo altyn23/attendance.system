@@ -5,6 +5,7 @@ import com.altynai.attendance.repository.ClassRepository;
 import com.altynai.attendance.account.User;
 import com.altynai.attendance.account.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpSession;
 
@@ -12,19 +13,30 @@ import jakarta.annotation.PostConstruct;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/classes")
 public class ClassController {
+    private static final Logger log = LoggerFactory.getLogger(ClassController.class);
 
     @Autowired
     private ClassRepository classRepository;
     
     @Autowired
     private UserRepository userRepository;
+
+    @Value("${app.seed-demo-classes.enabled:true}")
+    private boolean seedDemoClassesEnabled;
     
     @PostConstruct
     public void initTestData() {
+        if (!seedDemoClassesEnabled) {
+            return;
+        }
+
         if (classRepository.count() == 0) {
             List<Class> testClasses = new ArrayList<>();
             
@@ -114,7 +126,7 @@ public class ClassController {
                 classRepository.save(cls);
             }
             
-            System.out.println("✅ Тестовые занятия созданы: " + testClasses.size());
+            log.info("Demo classes created: {}", testClasses.size());
         }
     }
     
@@ -132,6 +144,66 @@ public class ClassController {
     public List<Class> getGroupClasses(@PathVariable String group) {
         return classRepository.findByGroup(group);
     }
+
+    @GetMapping("/teachers")
+    public Map<String, Object> getTeachers(HttpSession session) {
+        Map<String, Object> res = new HashMap<>();
+        String userId = (String) session.getAttribute("userId");
+        String role = (String) session.getAttribute("role");
+        if (userId == null || (!"TEACHER".equals(role) && !"ADMIN".equals(role))) {
+            res.put("error", "Unauthorized");
+            return res;
+        }
+
+        List<Map<String, String>> teachers = userRepository.findAll().stream()
+                .filter(u -> "TEACHER".equals(u.getRole()))
+                .map(u -> {
+                    Map<String, String> item = new HashMap<>();
+                    item.put("id", u.getId());
+                    item.put("fullName", u.getFullName().trim());
+                    item.put("email", u.getEmail());
+                    return item;
+                })
+                .sorted(Comparator.comparing(i -> i.get("fullName"), String.CASE_INSENSITIVE_ORDER))
+                .toList();
+
+        res.put("success", true);
+        res.put("teachers", teachers);
+        return res;
+    }
+
+    @GetMapping("/groups")
+    public Map<String, Object> getGroups(HttpSession session) {
+        Map<String, Object> res = new HashMap<>();
+        String userId = (String) session.getAttribute("userId");
+        String role = (String) session.getAttribute("role");
+        if (userId == null || (!"TEACHER".equals(role) && !"ADMIN".equals(role))) {
+            res.put("error", "Unauthorized");
+            return res;
+        }
+
+        Set<String> studentGroups = userRepository.findByRole("STUDENT").stream()
+                .map(User::getGroup)
+                .filter(g -> g != null && !g.isBlank())
+                .collect(Collectors.toSet());
+
+        Set<String> classGroups = classRepository.findAll().stream()
+                .map(Class::getGroup)
+                .filter(g -> g != null && !g.isBlank())
+                .collect(Collectors.toSet());
+
+        List<String> groups = new ArrayList<>();
+        groups.addAll(studentGroups);
+        groups.addAll(classGroups);
+        groups = groups.stream()
+                .distinct()
+                .sorted(String.CASE_INSENSITIVE_ORDER)
+                .toList();
+
+        res.put("success", true);
+        res.put("groups", groups);
+        return res;
+    }
     
     @PostMapping
     public Map<String, Object> createClass(@RequestBody Class newClass, HttpSession session) {
@@ -139,16 +211,35 @@ public class ClassController {
         
         String userId = (String) session.getAttribute("userId");
         String role = (String) session.getAttribute("role");
-        
-        if (!"TEACHER".equals(role) && !"ADMIN".equals(role)) {
-            res.put("error", "Тек оқытушылар сабақ қоса алады");
+        if (userId == null) {
+            res.put("error", "Unauthorized");
             return res;
         }
         
-        User teacher = userRepository.findById(userId).orElse(null);
-        if (teacher != null) {
-            newClass.setTeacherId(userId);
-            newClass.setTeacherName(teacher.getFullName());
+        if (!"ADMIN".equals(role)) {
+            res.put("error", "Сабақты тек әкімшілік тағайындайды");
+            return res;
+        }
+
+        if (newClass.getName() == null || newClass.getName().isBlank()
+                || newClass.getGroup() == null || newClass.getGroup().isBlank()
+                || newClass.getRoom() == null || newClass.getRoom().isBlank()) {
+            res.put("error", "Сабақ атауы, топ және аудитория міндетті");
+            return res;
+        }
+
+        String teacherId = newClass.getTeacherId();
+        if (teacherId != null && !teacherId.isBlank()) {
+            User selectedTeacher = userRepository.findById(teacherId).orElse(null);
+            if (selectedTeacher == null || !"TEACHER".equals(selectedTeacher.getRole())) {
+                res.put("error", "Таңдалған оқытушы табылмады");
+                return res;
+            }
+            newClass.setTeacherId(selectedTeacher.getId());
+            newClass.setTeacherName(selectedTeacher.getFullName().trim());
+        } else {
+            newClass.setTeacherId(null);
+            newClass.setTeacherName(null);
         }
         
         Class savedClass = classRepository.save(newClass);
@@ -165,6 +256,10 @@ public class ClassController {
         
         String userId = (String) session.getAttribute("userId");
         String role = (String) session.getAttribute("role");
+        if (userId == null) {
+            res.put("error", "Unauthorized");
+            return res;
+        }
         
         Optional<Class> classOpt = classRepository.findById(id);
         if (classOpt.isEmpty()) {
@@ -174,8 +269,8 @@ public class ClassController {
         
         Class existingClass = classOpt.get();
         
-        if (!"ADMIN".equals(role) && !userId.equals(existingClass.getTeacherId())) {
-            res.put("error", "Сізде бұл сабақты өзгертуге құқық жоқ");
+        if (!"ADMIN".equals(role)) {
+            res.put("error", "Сабақты тек әкімшілік өзгерте алады");
             return res;
         }
         
@@ -189,6 +284,21 @@ public class ClassController {
         existingClass.setSemester(updatedClass.getSemester());
         existingClass.setCredits(updatedClass.getCredits());
         existingClass.setDescription(updatedClass.getDescription());
+
+        String teacherId = updatedClass.getTeacherId();
+        if (teacherId != null && !teacherId.isBlank()) {
+            User selectedTeacher = userRepository.findById(teacherId).orElse(null);
+            if (selectedTeacher == null || !"TEACHER".equals(selectedTeacher.getRole())) {
+                res.put("error", "Таңдалған оқытушы табылмады");
+                return res;
+            }
+            existingClass.setTeacherId(selectedTeacher.getId());
+            existingClass.setTeacherName(selectedTeacher.getFullName().trim());
+        } else {
+            existingClass.setTeacherId(null);
+            existingClass.setTeacherName(null);
+        }
+
         existingClass.setUpdatedAt(java.time.LocalDateTime.now());
         
         Class savedClass = classRepository.save(existingClass);
@@ -205,6 +315,10 @@ public class ClassController {
         
         String userId = (String) session.getAttribute("userId");
         String role = (String) session.getAttribute("role");
+        if (userId == null) {
+            res.put("error", "Unauthorized");
+            return res;
+        }
         
         Optional<Class> classOpt = classRepository.findById(id);
         if (classOpt.isEmpty()) {
@@ -214,8 +328,8 @@ public class ClassController {
         
         Class existingClass = classOpt.get();
         
-        if (!"ADMIN".equals(role) && !userId.equals(existingClass.getTeacherId())) {
-            res.put("error", "Сізде бұл сабақты жоюға құқық жоқ");
+        if (!"ADMIN".equals(role)) {
+            res.put("error", "Сабақты тек әкімшілік жоя алады");
             return res;
         }
         

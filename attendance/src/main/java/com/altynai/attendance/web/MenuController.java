@@ -9,30 +9,36 @@ import jakarta.servlet.http.HttpSession;
 public class MenuController {
 
     private boolean notLogged(HttpSession s) {
-        return s.getAttribute("username") == null;
+        return s.getAttribute("userId") == null;
     }
 
     @GetMapping("/scan")
     public String scan(HttpSession session) {
         if (notLogged(session)) return "redirect:/login";
-        return "scan";     // templates/scan.html
+        return "redirect:/qr-scan";
     }
 
     @GetMapping("/students")
     public String students(HttpSession session) {
         if (notLogged(session)) return "redirect:/login";
-        return "students"; // templates/students.html
+        return "redirect:/student-list";
     }
 
     @GetMapping("/analytics")
     public String analytics(HttpSession session) {
         if (notLogged(session)) return "redirect:/login";
-        return "analytics";
+        return "redirect:/system-reports";
     }
 
     @GetMapping("/reports")
     public String reports(HttpSession session) {
         if (notLogged(session)) return "redirect:/login";
-        return "reports";
+        return "redirect:/attendance-report";
+    }
+
+    @GetMapping("/alerts")
+    public String alerts(HttpSession session) {
+        if (notLogged(session)) return "redirect:/login";
+        return "redirect:/notifications";
     }
 }

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Хабарландырулар</title>
+    <style>
+        body { font-family: "Inter", sans-serif; margin: 0; background: #eaf3ff; color: #1e293b; }
+        .wrap { max-width: 1100px; margin: 0 auto; padding: 20px; }
+        .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .btn { border: 1px solid #cbd5e1; background: #fff; color: #1e293b; border-radius: 10px; padding: 8px 12px; text-decoration: none; cursor: pointer; }
+        .card { background: #fff; border: 1px solid #dbe4f0; border-radius: 14px; padding: 14px; }
+        .row { display: flex; justify-content: space-between; gap: 10px; align-items: start; border-bottom: 1px solid #edf2f9; padding: 12px 0; }
+        .row:last-child { border-bottom: none; }
+        .title { font-weight: 700; margin-bottom: 4px; }
+        .meta { font-size: 12px; color: #64748b; margin-top: 4px; }
+        .empty { color: #64748b; text-align: center; padding: 20px; }
+        .badge { font-size: 12px; border-radius: 999px; padding: 4px 8px; background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="top">
+        <h1>Хабарландырулар</h1>
+        <div style="display:flex; gap:10px;">
+            <a href="/dashboard" class="btn">Басты бет</a>
+            <button class="btn" onclick="loadNotifications()">Жаңарту</button>
+        </div>
+    </div>
+    <section class="card">
+        <div id="unreadBox" class="meta"></div>
+        <div id="list"></div>
+    </section>
+</div>
+<script>
+    async function loadNotifications() {
+        const data = await fetch('/api/notifications/my').then(r => r.json());
+        const list = document.getElementById('list');
+        const unread = document.getElementById('unreadBox');
+        if (!data.success) {
+            list.innerHTML = '<div class="empty">Қате</div>';
+            return;
+        }
+        unread.textContent = `Оқылмаған: ${data.unreadCount || 0}`;
+        const items = data.items || [];
+        if (!items.length) {
+            list.innerHTML = '<div class="empty">Хабарландыру жоқ</div>';
+            return;
+        }
+        list.innerHTML = items.map(i => `
+            <div class="row">
+                <div>
+                    <div class="title">${esc(i.title || 'Хабарлама')}</div>
+                    <div>${esc(i.message || '')}</div>
+                    <div class="meta">${esc(i.type || '')} · ${esc(i.createdAt || '')}</div>
+                </div>
+                ${i.read ? '<span class="meta">Оқылды</span>' : `<button class="btn" onclick="markRead('${i.id}')">Оқыдым</button>`}
+            </div>
+        `).join('');
+    }
+
+    async function markRead(id) {
+        await fetch(`/api/notifications/${id}/read`, { method: 'POST' });
+        await loadNotifications();
+    }
+
+    function esc(v) {
+        return String(v || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+    loadNotifications();
+</script>
+<script src="/js/app-prefs.js"></script>
+</body>
+</html>

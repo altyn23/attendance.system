@@ -23,13 +23,22 @@ public class NewsRestController {
     }
 
     @PostMapping
-    public News create(@RequestBody News n) {
+    public Object create(@RequestBody News n, HttpSession session) {
+        String role = (String) session.getAttribute("role");
+        if (!"ADMIN".equals(role) && !"TEACHER".equals(role)) {
+            return java.util.Map.of("error", "Unauthorized");
+        }
         return repo.save(n);
     }
     
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable String id) {
+    public Object delete(@PathVariable String id, HttpSession session) {
+        String role = (String) session.getAttribute("role");
+        if (!"ADMIN".equals(role) && !"TEACHER".equals(role)) {
+            return java.util.Map.of("error", "Unauthorized");
+        }
         repo.deleteById(id);
+        return java.util.Map.of("success", true);
     }
 }
 

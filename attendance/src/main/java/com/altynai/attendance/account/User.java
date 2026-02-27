@@ -2,6 +2,7 @@ package com.altynai.attendance.account;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import java.time.LocalDate;
 
 @Document(collection = "users")
 public class User {
@@ -21,6 +22,13 @@ public class User {
     private String profileImage; 
     private java.time.LocalDateTime registrationDate;
     private java.time.LocalDateTime lastLoginDate;
+
+    private String externalId;
+    private LocalDate birthDate;
+    private String subject;
+    private String cabinet;
+    private String position;
+    private String curatorGroup;
     
     private String resetCode;
     private Long resetCodeExpires;
@@ -61,9 +69,28 @@ public class User {
     public java.time.LocalDateTime getLastLoginDate() { return lastLoginDate; }
     public void setLastLoginDate(java.time.LocalDateTime lastLoginDate) { this.lastLoginDate = lastLoginDate; }
 
+    public String getExternalId() { return externalId; }
+    public void setExternalId(String externalId) { this.externalId = externalId; }
+
+    public LocalDate getBirthDate() { return birthDate; }
+    public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
+
+    public String getSubject() { return subject; }
+    public void setSubject(String subject) { this.subject = subject; }
+
+    public String getCabinet() { return cabinet; }
+    public void setCabinet(String cabinet) { this.cabinet = cabinet; }
+
+    public String getPosition() { return position; }
+    public void setPosition(String position) { this.position = position; }
+
+    public String getCuratorGroup() { return curatorGroup; }
+    public void setCuratorGroup(String curatorGroup) { this.curatorGroup = curatorGroup; }
+
     public String getResetCode() { return resetCode; }
     public void setResetCode(String resetCode) { this.resetCode = resetCode; }
 
+    
     public Long getResetCodeExpires() { return resetCodeExpires; }
     public void setResetCodeExpires(Long resetCodeExpires) { this.resetCodeExpires = resetCodeExpires; }
     

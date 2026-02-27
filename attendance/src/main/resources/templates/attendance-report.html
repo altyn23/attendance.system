@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Қатысу есебі</title>
+    <style>
+        :root {
+            --bg-1: #102447;
+            --bg-2: #1f3f7a;
+            --panel: rgba(255, 255, 255, 0.92);
+            --text: #0f172a;
+            --muted: #64748b;
+            --line: #dbe4f0;
+            --brand: #2257c7;
+            --brand-2: #3b82f6;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Inter", "Manrope", "Segoe UI", sans-serif;
+            background: radial-gradient(circle at 10% -20%, #4f46e5 0%, transparent 45%),
+                        radial-gradient(circle at 90% 120%, #0ea5a4 0%, transparent 40%),
+                        linear-gradient(135deg, var(--bg-1), var(--bg-2));
+            color: var(--text);
+        }
+        .topbar { max-width: 1240px; margin: 0 auto; padding: 20px; display: flex; justify-content: space-between; color: #f8fafc; }
+        .title { font-size: 26px; font-weight: 800; }
+        .link-btn { border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.14); color: #fff; text-decoration: none; padding: 9px 14px; border-radius: 10px; font-weight: 600; }
+        .page { max-width: 1240px; margin: 0 auto; padding: 0 20px 26px; }
+        .panel { background: var(--panel); border-radius: 18px; box-shadow: 0 14px 34px rgba(2,6,23,.2); border: 1px solid rgba(255,255,255,.35); padding: 18px; }
+        .summary { margin-bottom: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .kpi { background: #fff; border: 1px solid #dbe4f0; border-radius: 12px; padding: 14px; }
+        .kpi-label { color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+        .kpi-value { font-size: 28px; font-weight: 800; }
+        .class-block { margin-bottom: 14px; }
+        .class-title { font-size: 19px; font-weight: 800; margin-bottom: 8px; }
+        .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+        table { width: 100%; border-collapse: collapse; min-width: 520px; }
+        th, td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 14px; }
+        th { background: #f8fafc; color: #334155; }
+        .status { border-radius: 999px; padding: 3px 9px; font-size: 12px; font-weight: 700; }
+        .status.PRESENT { background: #dcfce7; color: #166534; }
+        .status.LATE { background: #fef3c7; color: #92400e; }
+        .status.ABSENT { background: #fee2e2; color: #991b1b; }
+        @media (max-width: 760px) { .summary { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<header class="topbar">
+    <div class="title">Қатысу есебі</div>
+    <a href="/dashboard" class="link-btn">Басты бет</a>
+</header>
+
+<main class="page">
+    <section class="panel summary">
+        <div class="kpi">
+            <div class="kpi-label">Жалпы жазбалар</div>
+            <div class="kpi-value" th:text="${totalRecords}">0</div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-label">Пән саны</div>
+            <div class="kpi-value" th:text="${attendanceByClass != null ? #maps.size(attendanceByClass) : 0}">0</div>
+        </div>
+    </section>
+
+    <section class="panel" th:if="${attendanceByClass == null || attendanceByClass.isEmpty()}">
+        Қатысу деректері табылмады.
+    </section>
+
+    <section class="panel" th:if="${attendanceByClass != null && !attendanceByClass.isEmpty()}">
+        <div class="class-block" th:each="entry : ${attendanceByClass}">
+            <div class="class-title" th:text="${entry.key}">Class</div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Студент</th>
+                        <th>Күні</th>
+                        <th>Статус</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${entry.value}">
+                        <td th:text="${item.studentName}">Student</td>
+                        <td th:text="${item.date}">Date</td>
+                        <td><span class="status" th:classappend="${item.status}" th:text="${item.status}">STATUS</span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+<script src="/js/app-prefs.js"></script>
+</body>
+</html>

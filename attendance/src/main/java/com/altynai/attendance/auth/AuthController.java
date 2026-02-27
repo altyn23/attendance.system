@@ -19,17 +19,22 @@ public class AuthController {
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     @PostMapping("/register")
-    public Map<String, Object> register(@RequestBody Map<String, String> req) {
+    public Map<String, Object> register(@RequestBody Map<String, String> req, HttpSession session) {
         Map<String, Object> res = new HashMap<>();
+        String actorRole = (String) session.getAttribute("role");
+        if (!"ADMIN".equals(actorRole)) {
+            res.put("error", "Тіркелу жабық. Қолданушыны тек әкімші қоса алады");
+            return res;
+        }
         
         String email = req.get("email");
         String password = req.get("password");
         String firstName = req.get("firstName");
         String lastName = req.get("lastName");
         String phone = req.get("phone");
-        String role = req.get("role");
         String department = req.get("department");
         String group = req.get("group");
+        String role = req.get("role");
 
         if (email == null || password == null || firstName == null || lastName == null ||
                 email.isEmpty() || password.isEmpty() || firstName.isEmpty() || lastName.isEmpty()) {
@@ -53,7 +58,7 @@ public class AuthController {
         user.setLastName(lastName);
         user.setPhone(phone);
         user.setPasswordHash(encoder.encode(password));
-        user.setRole(role != null ? role : "STUDENT");
+        user.setRole(resolveRole(role));
         user.setDepartment(department);
         user.setGroup(group);
         user.setRegistrationDate(java.time.LocalDateTime.now());
@@ -61,7 +66,7 @@ public class AuthController {
         user = userRepository.save(user);
         
         res.put("success", true);
-        res.put("message", "Тіркелу сәтті өтті");
+        res.put("message", "Пайдаланушы сәтті қосылды");
         res.put("userId", user.getId());
         return res;
     }
@@ -97,6 +102,7 @@ public class AuthController {
         session.setAttribute("email", user.getEmail());
         session.setAttribute("fullName", user.getFullName());
         session.setAttribute("role", user.getRole());
+        session.setAttribute("profileImage", user.getProfileImage());
 
         res.put("success", true);
         res.put("message", "Кіру сәтті өтті");
@@ -106,7 +112,8 @@ public class AuthController {
             "firstName", user.getFirstName(),
             "lastName", user.getLastName(),
             "role", user.getRole(),
-            "fullName", user.getFullName()
+            "fullName", user.getFullName(),
+            "profileImage", user.getProfileImage() != null ? user.getProfileImage() : ""
         ));
         return res;
     }
@@ -120,13 +127,22 @@ public class AuthController {
     }
 
     @GetMapping("/users")
-    public List<User> allUsers() {
+    public Object allUsers(HttpSession session) {
+        String role = (String) session.getAttribute("role");
+        if (!"ADMIN".equals(role)) {
+            return Map.of("error", "Unauthorized");
+        }
         return userRepository.findAll();
     }
 
     @PutMapping("/role/{id}")
-    public Map<String, String> changeRole(@PathVariable String id, @RequestBody Map<String, String> req) {
+    public Map<String, String> changeRole(@PathVariable String id, @RequestBody Map<String, String> req, HttpSession session) {
         Map<String, String> res = new HashMap<>();
+        String role = (String) session.getAttribute("role");
+        if (!"ADMIN".equals(role)) {
+            res.put("error", "Unauthorized");
+            return res;
+        }
         String newRole = req.get("role");
 
         userRepository.findById(id).ifPresentOrElse(user -> {
@@ -136,5 +152,12 @@ public class AuthController {
         }, () -> res.put("error", "Қолданушы табылмады"));
 
         return res;
+    }
+
+    private String resolveRole(String role) {
+        if ("ADMIN".equals(role) || "TEACHER".equals(role) || "STUDENT".equals(role)) {
+            return role;
+        }
+        return "STUDENT";
     }
 }

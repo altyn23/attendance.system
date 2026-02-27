@@ -8,6 +8,8 @@ import com.altynai.attendance.model.QRSession;
 import com.altynai.attendance.repository.AttendanceRepository;
 import com.altynai.attendance.repository.ClassRepository;
 import com.altynai.attendance.repository.QRSessionRepository;
+import com.altynai.attendance.settings.SystemSettings;
+import com.altynai.attendance.settings.SystemSettingsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -33,6 +35,9 @@ public class AdminController {
     
     @Autowired
     private QRSessionRepository qrSessionRepository;
+
+    @Autowired
+    private SystemSettingsService systemSettingsService;
 
     @GetMapping("/users")
     public String usersPage(HttpSession session, Model model) {
@@ -256,24 +261,24 @@ public class AdminController {
     @GetMapping("/api/admin/settings")
     @ResponseBody
     public Map<String, Object> getSettings(HttpSession session) {
-        Map<String, Object> settings = new HashMap<>();
-        
+        Map<String, Object> res = new HashMap<>();
         String role = (String) session.getAttribute("role");
         if (!"ADMIN".equals(role)) {
-            settings.put("error", "Unauthorized");
-            return settings;
+            res.put("error", "Unauthorized");
+            return res;
         }
-        
-        settings.put("qrCodeDuration", 15); 
-        settings.put("lateThreshold", 10); 
-        settings.put("minAttendanceRate", 75);
-        settings.put("semesterStart", "2024-09-01");
-        settings.put("semesterEnd", "2025-01-31");
-        settings.put("systemVersion", "1.0.0");
-        settings.put("databaseType", "MongoDB");
-        settings.put("maxUploadSize", "10MB");
-        
-        return settings;
+
+        SystemSettings settings = systemSettingsService.getSettings();
+        res.put("qrCodeDuration", settings.getQrCodeDuration());
+        res.put("lateThreshold", settings.getLateThreshold());
+        res.put("minAttendanceRate", settings.getMinAttendanceRate());
+        res.put("semesterStart", settings.getSemesterStart());
+        res.put("semesterEnd", settings.getSemesterEnd());
+        res.put("systemVersion", settings.getSystemVersion());
+        res.put("databaseType", settings.getDatabaseType());
+        res.put("maxUploadSize", settings.getMaxUploadSize());
+        res.put("updatedAt", settings.getUpdatedAt());
+        return res;
     }
     
     @PostMapping("/api/admin/settings")
@@ -287,9 +292,10 @@ public class AdminController {
             return result;
         }
         
+        SystemSettings saved = systemSettingsService.updateSettings(newSettings);
         result.put("success", true);
         result.put("message", "Баптаулар сәтті сақталды");
-        result.put("updatedSettings", newSettings);
+        result.put("updatedAt", saved.getUpdatedAt());
         
         return result;
     }
